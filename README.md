@@ -18,15 +18,15 @@ https://www.r-project.org
 Before starting, make sure that "kepler_solar-like_stellar_parameters.csv" and "ExoMult.R" are located in the same directory. Start by opeaning R in this directory.
 
 ```
-R
+$ R
 ```
 Now load ExoMult into R
 ```
-source("ExoMult")
+> source("ExoMult")
 ```
 Now you can execute the ExoMult function
 ```
-ExoMult()
+> ExoMult()
 ```
 
 ExoMult will return a data frame of the detected planets and export the results to a csv file "simulated_detect_pop.csv"
