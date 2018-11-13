@@ -1,4 +1,5 @@
-ExoMult is an R based program developed by Jon Zink. 
+ExoMult
+an R based program developed by Jon Zink. 
 If you make use of this code, please cite:
 J. K. Zink, J. L. Christiansen, and  B. M. S. Hansen 2018, MNRAS 
 
