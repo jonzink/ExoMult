@@ -8,7 +8,7 @@
 
 
 
-ExoMult <- function(rMin=0.5,rMax=16,alpha_1=-1.76,rad_break=2.66,alpha_2=-4.39,pMin=.5,pMax=500,beta_1=0.79,per_break=7.025,beta_2=-0.61,frac_m1=.74,frac_m2=.71,frac_m3=.68,frac_m4=.66,frac_m5=.64,frac_m6=.60,frac_m7=.46,export_csv=TRUE){
+ExoMult <- function(rMin=0.5,rMax=16,alpha_1=-1.76,rad_break=2.66,alpha_2=-4.39,pMin=.5,pMax=500,beta_1=0.79,per_break=7.025,beta_2=-0.61,mut_Ray=1,frac_m1=.74,frac_m2=.71,frac_m3=.68,frac_m4=.66,frac_m5=.64,frac_m6=.60,frac_m7=.46,export_csv=TRUE){
 
 	###Input Errors
 	if(frac_m1<frac_m2 | frac_m2<frac_m3 | frac_m3<frac_m4 | frac_m4<frac_m5 | frac_m5<frac_m6 | frac_m6<frac_m7){
@@ -32,13 +32,6 @@ ExoMult <- function(rMin=0.5,rMax=16,alpha_1=-1.76,rad_break=2.66,alpha_2=-4.39,
 		}			
 
 
-
-
-	print("Loading required libraries")
-	tryCatch(library(VGAM),
-		error=function(e) {
-			install.packages("VGAM", dependencies=TRUE)
-			library(VGAM)})
 
 	print("Importing stellar population parameters")
 	###Import the stellar population
@@ -87,6 +80,14 @@ ExoMult <- function(rMin=0.5,rMax=16,alpha_1=-1.76,rad_break=2.66,alpha_2=-4.39,
 		rValue=runif(n)
 		results=ifelse(rValue<=turn,(rValue*(aCon+1)/constant1+xmin^(aCon+1))^(1/(aCon+1)),((rValue-turn)*(bCon+1)/constant2+xmix^(bCon+1))^(1/(bCon+1)))
 	  	return(results)
+	  	}
+	
+		
+	####Rayleigh Distribution####
+	rrayleigh <- function(n,sigma){
+	 	yValue=runif(n)
+		invCDF=sqrt(-2*sigma*log(1-yValue))
+	  	return(invCDF)
 	  	}
 
 
@@ -232,7 +233,7 @@ ExoMult <- function(rMin=0.5,rMax=16,alpha_1=-1.76,rad_break=2.66,alpha_2=-4.39,
 
 	###Draw Inclination Parameters
 	system_inclination=asin(runif(number_stars,0,1))
-	system_average_mutInc=rrayleigh(number_stars,1)
+	system_average_mutInc=rrayleigh(number_stars,mut_Ray)
 	intial_w=asin(runif(number_stars,0,1))
 
 	###Calculate Impact parameters
@@ -395,7 +396,7 @@ ExoMult <- function(rMin=0.5,rMax=16,alpha_1=-1.76,rad_break=2.66,alpha_2=-4.39,
 	if(export_csv){
 		#Print to csv
 		print("Printing detected population to CSV file...simulated_detect_pop.csv")
-		write.csv(return_df, file = "Simulated_detected_population.csv",row.names=FALSE, na="",quote = FALSE)
+		write.csv(return_df, file = "simulated_detect_pop.csv",row.names=FALSE, na="",quote = FALSE)
 		}
 
 	return(return_df)
