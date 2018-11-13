@@ -39,16 +39,27 @@ ExoMult(rMin=0.5,rMax=16,alpha_1=-1.76,rad_break=2.66,alpha_2=-4.39,pMin=.5,pMax
 ```
 # Arguments
 
+
 rMin, rMax   =   The minimum/maximum values of radius considered in this population simulation. The units are provided in Earth radii.
+
+
 pMin, pMax = The minimum/maximum values of period considered in this population simulation. The units are provided in days.
 
+
 alpha_1, alpha_2 = The population parameter for the planet radius distribution. The values correspond to exponent of the power-law.
+
+
 beta_1, beta_2 = The population parameter for the planet period distribution. The values correspond to exponent of the power-law.
 
+
 rad_break = The radius value where the power-law distribution changes exponents.  
+
+
 per_break = The radius value where the power-law distribution changes exponents.  
 
+
 frac_m1,frac_m2,frac_m3,frac_m4,frac_m5,frac_m6,frac_m7 = the fraction of the stellar population with at least m planets.
+
 
 export_csv = Tell ExoMult whether it should or should not print the results to a csv file.
 
