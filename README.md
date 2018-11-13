@@ -35,7 +35,7 @@ ExoMult will return a data frame of the detected planets and export the results 
 
 The above opperation will run ExoMult with the default setting.
 ```
-ExoMult(rMin=0.5,rMax=16,alpha_1=-1.76,rad_break=2.66,alpha_2=-4.39,pMin=.5,pMax=500,beta_1=0.79,per_break=7.025,beta_2=-0.61,frac_m1=.74,frac_m2=.71,frac_m3=.68,frac_m4=.66,frac_m5=.64,frac_m6=.60,frac_m7=.46,export_csv=TRUE)
+ExoMult(rMin=0.5, rMax=16, alpha_1=-1.76, rad_break=2.66, alpha_2=-4.39, pMin=-.5, pMax=500, beta_1=0.79, per_break=7.025, beta_2=-0.61, frac_m1=0.74, frac_m2=0.71, frac_m3=0.68, frac_m4=0.66, frac_m5=0.64, frac_m6=0.60, frac_m7=0.46, export_csv=TRUE)
 ```
 # Arguments
 
