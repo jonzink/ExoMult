@@ -58,7 +58,7 @@ rad_break = The radius value where the power-law distribution changes exponents.
 per_break = The radius value where the power-law distribution changes exponents.  
 
 
-frac_m1,frac_m2,frac_m3,frac_m4,frac_m5,frac_m6,frac_m7 = the fraction of the stellar population with at least m planets.
+frac_m1, frac_m2, frac_m3, frac_m4, frac_m5, frac_m6, frac_m7 = the fraction of the stellar population with at least m planets.
 
 
 export_csv = Tell ExoMult whether it should or should not print the results to a csv file.
