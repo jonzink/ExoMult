@@ -1,9 +1,8 @@
-ExoMult
-an R based program developed by Jon Zink. 
-If you make use of this code, please cite:
-J. K. Zink, J. L. Christiansen, and  B. M. S. Hansen 2018, MNRAS 
+# ExoMult
+This program will simulate the transiting exoplanet population found Kepler from an underlaying power-law distribution. Multiplicity and its effects on detection efficiency are also considered here.
+ 
 
-
+## Getting Started
 To run the software begin by install R. The latest version of R can be downloaded from:
 https://www.r-project.org
 
@@ -52,4 +51,5 @@ export_csv = Tell ExoMult whether it should or should not print the results to a
 
 Recommendations: To utilize this code for an alternative stellar population, be sure that your stellar sample file has the same format as "kepler_solar-like_stellar_parameters.csv". 
 
-
+If you make use of this code, please cite:
+J. K. Zink, J. L. Christiansen, and  B. M. S. Hansen 2018, MNRAS 
