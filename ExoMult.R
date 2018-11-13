@@ -1,3 +1,13 @@
+#!/usr/bin/Rscript
+
+### E x o M u l t -  Created by Jon Zink ###
+### Devolped on R 3.4.3 ###
+
+### If you make use of this code, please cite: ###
+### J. K. Zink, J. L. Christiansen, and  B. M. S. Hansen 2018, MNRAS
+
+
+
 ExoMult <- function(rMin=0.5,rMax=16,alpha_1=-1.76,rad_break=2.66,alpha_2=-4.39,pMin=.5,pMax=500,beta_1=0.79,per_break=7.025,beta_2=-0.61,frac_m1=.74,frac_m2=.71,frac_m3=.68,frac_m4=.66,frac_m5=.64,frac_m6=.60,frac_m7=.46,export_csv=TRUE){
 
 	###Input Errors
@@ -31,7 +41,7 @@ ExoMult <- function(rMin=0.5,rMax=16,alpha_1=-1.76,rad_break=2.66,alpha_2=-4.39,
 			library(VGAM)})
 
 	print("Importing stellar population parameters")
-	#Import the stellar population
+	###Import the stellar population
 	tryCatch({star=read.table("kepler_solar-like_stellar_parameters.csv", header=FALSE, sep=",",skip = 2, 
 		col.names=c("KIC","T_eff","Teff_errp","Teff_errm","logg","logg_errp","logg_errm","Rad","Rad_errp","Rad_errm","Mass","Mass_errp","Mass_errm",
 		"duty","d_span","CDPP1.5","CDPP2","CDPP2.5","CDPP3","CDPP3.5","CDPP4.5","CDPP5","CDPP6","CDPP7.5","CDPP9","CDPP10.5","CDPP12","CDPP12.5","CDPP15"))},
