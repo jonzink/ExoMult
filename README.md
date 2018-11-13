@@ -22,7 +22,7 @@ $ R
 ```
 Now load ExoMult into R
 ```
-> source("ExoMult")
+> source("ExoMult.R")
 ```
 Now you can execute the ExoMult function
 ```
