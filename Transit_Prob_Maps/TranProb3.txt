@@ -5,7 +5,7 @@
 ####    
 ####
 ####
-a_p/R	transit_prob
+log10(a_p/R)	transit_prob
 "1"	0.009385
 "2"	0.009051
 "3"	0.009338
