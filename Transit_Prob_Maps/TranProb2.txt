@@ -1,11 +1,11 @@
 #### Transit probability for two planets#####
 ####
 #### Here we have incorporated the mutual inclination distribution of Fang and Margot (2012)
-#### 
+#### Each step of a_p/R is unifrom in log10() space ranging from a_p/R=1 to a_p/R=500
 ####    
 ####
 ####
-log10(a_p/R)	transit_prob
+a_p/R	transit_prob
 "1"	0.025626
 "2"	0.025872
 "3"	0.025734
