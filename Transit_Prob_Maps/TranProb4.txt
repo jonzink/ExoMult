@@ -1,7 +1,7 @@
 #### Transit probability for four planets#####
 ####
 #### Here we have incorporated the mutual inclination distribution of Fang and Margot (2012)
-#### 
+#### Each step of a_p/R is unifrom in log10() space ranging from a_p/R=1 to a_p/R=500
 ####    
 ####
 ####
