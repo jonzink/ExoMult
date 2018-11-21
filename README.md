@@ -8,7 +8,7 @@ These instructions will get you a copy of the project up and running on your loc
 
 ### Prerequisites
 
-To run the software begin by install R. The latest version of R can be downloaded from:
+To run the software begin by installing R. The latest version of R can be downloaded from:
 ```
 https://www.r-project.org
 ```
