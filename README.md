@@ -35,9 +35,9 @@ ExoMult will return a data frame of the detected planets and export the results 
 
 The above opperation will run ExoMult with the default setting.
 ```
-ExoMult(rMin=0.5, rMax=16, alpha_1=-1.76, rad_break=2.66, alpha_2=-4.39, pMin=0.5, pMax=500, 
-  beta_1=0.79, per_break=7.025, beta_2=-0.61, mut_Ray=1, frac_m1=0.74, frac_m2=0.71, frac_m3=0.68,
-  frac_m4=0.66, frac_m5=0.64, frac_m6=0.60, frac_m7=0.46, export_csv=TRUE)
+ExoMult(rMin=0.5, rMax=16, alpha_1=-1.65, rad_break=2.66, alpha_2=-4.35, pMin=0.5, pMax=500, 
+  beta_1=0.76, per_break=7.09, beta_2=-0.64, mut_Ray=1, ecc_alpha=0, ecc_beta=1, frac_m1=0.72,
+  frac_m2=0.68, frac_m3=0.66, frac_m4=0.63, frac_m5=0.60, frac_m6=0.55, frac_m7=0.40, export_csv=TRUE)
 ```
   # Arguments
 
@@ -60,7 +60,10 @@ rad_break = The radius value where the power-law distribution changes exponents.
 per_break = The radius value where the power-law distribution changes exponents.  
 
 
-mut_Ray = The rayleigh distribution parameter used to determine the expected mutual inclination dispersion for each system. This values is given in units of degrees.
+mut_Ray = The Rayleigh distribution parameter used to determine the expected mutual inclination dispersion for each system. This values is given in units of degrees.
+
+
+ecc_alpha, ecc_beta = The Beta distribution parameters used to determine the eccentricty of each planet. The default settings will produce zero eccentricity for each planet.
 
 
 frac_m1, frac_m2, frac_m3, frac_m4, frac_m5, frac_m6, frac_m7 = the fraction of the stellar population with at least m planets.
