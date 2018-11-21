@@ -8,10 +8,11 @@
 
 
 
-ExoMult <- function(rMin=0.5,rMax=16,alpha_1=-1.76,rad_break=2.66,alpha_2=-4.39,pMin=.5,pMax=500,beta_1=0.79,per_break=7.025,beta_2=-0.61,mut_Ray=1,frac_m1=.74,frac_m2=.71,frac_m3=.68,frac_m4=.66,frac_m5=.64,frac_m6=.60,frac_m7=.46,export_csv=TRUE){
+ExoMult <- function(rMin=0.5,rMax=16,alpha_1=-1.65,rad_break=2.66,alpha_2=-4.35,pMin=.5,pMax=500,beta_1=0.76,per_break=7.09,beta_2=-0.64,
+	mut_Ray=1,ecc_alpha=0,ecc_beta=1,frac_m1=.72,frac_m2=.68,frac_m3=.66,frac_m4=.63,frac_m5=.60,frac_m6=.55,frac_m7=.40,export_csv=TRUE){
 
 	###Input Errors
-	if(frac_m1<frac_m2 | frac_m2<frac_m3 | frac_m3<frac_m4 | frac_m4<frac_m5 | frac_m5<frac_m6 | frac_m6<frac_m7){
+	if(frac_m1<=frac_m2 | frac_m2<=frac_m3 | frac_m3<=frac_m4 | frac_m4<=frac_m5 | frac_m5<=frac_m6 | frac_m6<=frac_m7){
 		print("frac values must be in descending order")
 		return()
 		}
@@ -65,13 +66,6 @@ ExoMult <- function(rMin=0.5,rMax=16,alpha_1=-1.76,rad_break=2.66,alpha_2=-4.39,
 	CDPPy[13,]=star$CDPP12.5
 	CDPPy[14,]=star$CDPP15
 
-
-	######Determine Stellar Limb Darkening parameters
-	limb_u1=-.000193*star$T_eff+1.5169
-	limb_u2=.000125*star$T_eff-0.4601
-
-
-
 	####Broken Powerlaw Distribution Draw####
 	brokenPow <- function(n,aCon,bCon,xmix,xmin,xmax){
 	 	constant1=((xmix^(aCon+1)-xmin^(aCon+1))/(aCon+1)+(xmix^aCon/xmix^bCon)*(xmax^(bCon+1)-xmix^(bCon+1))/(bCon+1))^-1
@@ -86,40 +80,46 @@ ExoMult <- function(rMin=0.5,rMax=16,alpha_1=-1.76,rad_break=2.66,alpha_2=-4.39,
 	####Rayleigh Distribution####
 	rrayleigh <- function(n,sigma){
 	 	yValue=runif(n)
-		invCDF=sqrt(-2*sigma*log(1-yValue))
+		invCDF=sqrt(-2*sigma^2*log(1-yValue))
 	  	return(invCDF)
 	  	}
 
+	###Function for MES calculation
+	MES_calc<-function(star, period, radius,cdpp){
 
+		######Determine Stellar Limb Darkening parameters
+		limb_u1=-.000193*star$T_eff+1.5169
+		limb_u2=.000125*star$T_eff-0.4601
 
-	######Function for detection probability#################
-	probability_detection<-function(star, period, radius,b,cdpp,u1,u2,plNum){
-	
-		semiMajor=(period^2*star$Mass*gravConstant/(4*pi^2))^(1/3)
-		transit_chord=(1-b^2)^.5
-		transit_duration=star$Rad*period/(semiMajor*pi)*transit_chord*24
+		######Calculate Transit Depth####
+		krp=radius/star$Rad*0.00916399
+		c0  = 1.0 - (limb_u1+limb_u2)
+		omega = c0/4+0/5+(limb_u1+2*limb_u2)/6+0/7-limb_u2/8
+		ksq = 1.0 - krp^2
+		tmp0 = c0/4 * ksq
+		tmp2 = (limb_u1+2*limb_u2)/6* ksq^(3.0/2.0)
+		tmp4 = -limb_u2/8 * ksq^2
+		depth=(1.0 - (tmp0 + tmp2 + tmp4)/omega) * 1.0e6
 
+		######Calculate MES####
 		number_transits=star$d_span/period
-	
+		MES=depth/(cdpp)*1.003*number_transits^.5
+
+		return(MES)
+		}
+		
+	######Function for detection probability#################
+	probability_detection<-function(star, period, radius,cdpp,plNum){
+		
+		######Calculate MES####
+		MES=MES_calc(star, period, radius,cdpp)
+		
 		######Window Function#########
+		number_transits=star$d_span/period
 		probabilty_window=1-(1-star$duty)^number_transits-number_transits*star$duty*(1-star$duty)^(number_transits-1)-number_transits*(number_transits-1)/2*star$duty^2*(1-star$duty)^(number_transits-2)
 		probabilty_window=ifelse(number_transits<1,0,probabilty_window)
 		probabilty_window=ifelse(probabilty_window<0,0,probabilty_window)
 		probabilty_window=ifelse(probabilty_window>1,1,probabilty_window)
-
-
-		######Calculate Transit Depth####
-		krp=radius/star$Rad*0.00916399
-		c0  = 1.0 - (u1+u2)
-		omega = c0/4+0/5+(u1+2*u2)/6+0/7-u2/8
-		ksq = 1.0 - krp^2
-		tmp0 = c0/4 * ksq
-		tmp2 = (u1+2*u2)/6* ksq^(3.0/2.0)
-		tmp4 = -u2/8 * ksq^2
-		depth=(1.0 - (tmp0 + tmp2 + tmp4)/omega) * 1.0e6
-
-		######Calculate MES####
-		MES=depth/(cdpp)*1.003*number_transits^.5
 
 		###Calulate the fraction detected at this MES
 		if(plNum==1){
@@ -129,10 +129,11 @@ ExoMult <- function(rMin=0.5,rMax=16,alpha_1=-1.76,rad_break=2.66,alpha_2=-4.39,
 		}
 		return(fdet*probabilty_window)
 		}
+		
 	
 	
-	
-	impactDraw <- function(n,star,inclination,average_mutInc,per,int_w,plNum){
+		#####Function to determine impact parameter
+	impactDraw <- function(n,star,inclination,average_mutInc,per,node,ecc,arg_peri,plNum){
 		
 		if(plNum==1){
 			mutual_inclination=0
@@ -145,7 +146,7 @@ ExoMult <- function(rMin=0.5,rMax=16,alpha_1=-1.76,rad_break=2.66,alpha_2=-4.39,
 	
 		####Calculate Planet Inclination
 		if(plNum==1){
-			inclination_m=acos(cos(inclination)*cos(mutual_inclination)+sin(inclination)*sin(mutual_inclination)*cos(int_w))
+			inclination_m=acos(cos(inclination)*cos(mutual_inclination)+sin(inclination)*sin(mutual_inclination)*cos(node))
 		}	else{
 			inclination_m=acos(cos(inclination)*cos(mutual_inclination)+sin(inclination)*sin(mutual_inclination)*cos(w))
 		}
@@ -153,7 +154,7 @@ ExoMult <- function(rMin=0.5,rMax=16,alpha_1=-1.76,rad_break=2.66,alpha_2=-4.39,
 		###Planet Semi-major axis
 		semiMajor=(per^2*star$Mass*gravConstant/(4*pi^2))^(1/3)
 	
-		return(abs(semiMajor/star$Rad*(sin(inclination_m)*sin(int_w)-cos(inclination_m)*cos(int_w))))
+		return(abs(semiMajor/star$Rad*(1-ecc^2)/(1+ecc*sin(arg_peri))*(sin(inclination_m)*sin(node)-cos(inclination_m)*cos(node))))
 		}
 
 
@@ -183,14 +184,24 @@ ExoMult <- function(rMin=0.5,rMax=16,alpha_1=-1.76,rad_break=2.66,alpha_2=-4.39,
 	per_sorted_m5=numeric(number_stars)
 	per_sorted_m6=numeric(number_stars)
 	per_sorted_m7=numeric(number_stars)
-
-	impact_sorted_m1=numeric(number_stars)
-	impact_sorted_m2=numeric(number_stars)
-	impact_sorted_m3=numeric(number_stars)
-	impact_sorted_m4=numeric(number_stars)
-	impact_sorted_m5=numeric(number_stars)
-	impact_sorted_m6=numeric(number_stars)
-	impact_sorted_m7=numeric(number_stars)
+	
+	eccentricity_sorted_m1=numeric(number_stars)
+	eccentricity_sorted_m2=numeric(number_stars)
+	eccentricity_sorted_m3=numeric(number_stars)
+	eccentricity_sorted_m4=numeric(number_stars)
+	eccentricity_sorted_m5=numeric(number_stars)
+	eccentricity_sorted_m6=numeric(number_stars)
+	eccentricity_sorted_m7=numeric(number_stars)
+	
+	CDPP_sorted_m1=numeric(number_stars)
+	CDPP_sorted_m2=numeric(number_stars)
+	CDPP_sorted_m3=numeric(number_stars)
+	CDPP_sorted_m4=numeric(number_stars)
+	CDPP_sorted_m5=numeric(number_stars)
+	CDPP_sorted_m6=numeric(number_stars)
+	CDPP_sorted_m7=numeric(number_stars)
+	
+	
 
 	print("Drawing exoplanet population from broken power-law distribution")
 	#######Draw Planet Population
@@ -235,18 +246,36 @@ ExoMult <- function(rMin=0.5,rMax=16,alpha_1=-1.76,rad_break=2.66,alpha_2=-4.39,
 	system_inclination=asin(runif(number_stars,0,1))
 	system_average_mutInc=rrayleigh(number_stars,mut_Ray)
 	intial_w=asin(runif(number_stars,0,1))
+	
+	###Draw Eccentricity Parameters
+	eccentricity_m1=rbeta(number_stars,ecc_alpha,ecc_beta)
+	eccentricity_m2=rbeta(number_stars,ecc_alpha,ecc_beta)
+	eccentricity_m3=rbeta(number_stars,ecc_alpha,ecc_beta)
+	eccentricity_m4=rbeta(number_stars,ecc_alpha,ecc_beta)
+	eccentricity_m5=rbeta(number_stars,ecc_alpha,ecc_beta)
+	eccentricity_m6=rbeta(number_stars,ecc_alpha,ecc_beta)
+	eccentricity_m7=rbeta(number_stars,ecc_alpha,ecc_beta)
+	
+	argPericenter_m1=asin(runif(number_stars,-1,1))
+	argPericenter_m2=asin(runif(number_stars,-1,1))
+	argPericenter_m3=asin(runif(number_stars,-1,1))
+	argPericenter_m4=asin(runif(number_stars,-1,1))
+	argPericenter_m5=asin(runif(number_stars,-1,1))
+	argPericenter_m6=asin(runif(number_stars,-1,1))
+	argPericenter_m7=asin(runif(number_stars,-1,1))
+	
 
 	###Calculate Impact parameters
-	impact_m1=impactDraw(number_stars,star,system_inclination,0,per_m1,intial_w,1)
-	impact_m2=impactDraw(number_stars,star,system_inclination,system_average_mutInc,per_m2,intial_w,2)
-	impact_m3=impactDraw(number_stars,star,system_inclination,system_average_mutInc,per_m3,intial_w,3)
-	impact_m4=impactDraw(number_stars,star,system_inclination,system_average_mutInc,per_m4,intial_w,4)
-	impact_m5=impactDraw(number_stars,star,system_inclination,system_average_mutInc,per_m5,intial_w,5)
-	impact_m6=impactDraw(number_stars,star,system_inclination,system_average_mutInc,per_m6,intial_w,6)
-	impact_m7=impactDraw(number_stars,star,system_inclination,system_average_mutInc,per_m7,intial_w,7)
+	impact_m1=impactDraw(number_stars,star,system_inclination,0,per_m1,intial_w,eccentricity_m1,argPericenter_m1,1)
+	impact_m2=impactDraw(number_stars,star,system_inclination,system_average_mutInc,per_m2,intial_w,eccentricity_m2,argPericenter_m2,2)
+	impact_m3=impactDraw(number_stars,star,system_inclination,system_average_mutInc,per_m3,intial_w,eccentricity_m3,argPericenter_m3,3)
+	impact_m4=impactDraw(number_stars,star,system_inclination,system_average_mutInc,per_m4,intial_w,eccentricity_m4,argPericenter_m4,4)
+	impact_m5=impactDraw(number_stars,star,system_inclination,system_average_mutInc,per_m5,intial_w,eccentricity_m5,argPericenter_m5,5)
+	impact_m6=impactDraw(number_stars,star,system_inclination,system_average_mutInc,per_m6,intial_w,eccentricity_m6,argPericenter_m6,6)
+	impact_m7=impactDraw(number_stars,star,system_inclination,system_average_mutInc,per_m7,intial_w,eccentricity_m7,argPericenter_m7,7)
 
 
-	####Discard planets with impact parameters grreater than 1
+	####Discard planets with impact parameters greater than 1
 	rad_m1=ifelse(impact_m1>1,0,rad_m1)
 	rad_m2=ifelse(impact_m2>1,0,rad_m2)
 	rad_m3=ifelse(impact_m3>1,0,rad_m3)
@@ -263,16 +292,63 @@ ExoMult <- function(rMin=0.5,rMax=16,alpha_1=-1.76,rad_break=2.66,alpha_2=-4.39,
 	impact_m5=ifelse(impact_m5<=1,impact_m5,1)
 	impact_m6=ifelse(impact_m6<=1,impact_m6,1)
 	impact_m7=ifelse(impact_m7<=1,impact_m7,1)
+	
+	###Calculate Transit Chords
+	tran_chord_m1=(1-impact_m1^2)^.5
+	tran_chord_m2=(1-impact_m2^2)^.5
+	tran_chord_m3=(1-impact_m3^2)^.5
+	tran_chord_m4=(1-impact_m4^2)^.5
+	tran_chord_m5=(1-impact_m5^2)^.5
+	tran_chord_m6=(1-impact_m6^2)^.5
+	tran_chord_m7=(1-impact_m7^2)^.5
+	
+	##Calculate Semi-Major Axis
+	semiMajor_m1=(per_m1^2*star$Mass*gravConstant/(4*pi^2))^(1/3)
+	semiMajor_m2=(per_m2^2*star$Mass*gravConstant/(4*pi^2))^(1/3)
+	semiMajor_m3=(per_m3^2*star$Mass*gravConstant/(4*pi^2))^(1/3)
+	semiMajor_m4=(per_m4^2*star$Mass*gravConstant/(4*pi^2))^(1/3)
+	semiMajor_m5=(per_m5^2*star$Mass*gravConstant/(4*pi^2))^(1/3)
+	semiMajor_m6=(per_m6^2*star$Mass*gravConstant/(4*pi^2))^(1/3)
+	semiMajor_m7=(per_m7^2*star$Mass*gravConstant/(4*pi^2))^(1/3)
 
+	#Calculate Transit Duration
+	tran_duration_m1=star$Rad*per_m1/(semiMajor_m1*pi)*tran_chord_m1*(1-eccentricity_m1^2)^.5/(1+eccentricity_m1*sin(argPericenter_m1))*24
+	tran_duration_m2=star$Rad*per_m2/(semiMajor_m2*pi)*tran_chord_m2*(1-eccentricity_m2^2)^.5/(1+eccentricity_m2*sin(argPericenter_m2))*24
+	tran_duration_m3=star$Rad*per_m3/(semiMajor_m3*pi)*tran_chord_m3*(1-eccentricity_m3^2)^.5/(1+eccentricity_m3*sin(argPericenter_m3))*24
+	tran_duration_m4=star$Rad*per_m4/(semiMajor_m4*pi)*tran_chord_m4*(1-eccentricity_m4^2)^.5/(1+eccentricity_m4*sin(argPericenter_m4))*24
+	tran_duration_m5=star$Rad*per_m5/(semiMajor_m5*pi)*tran_chord_m5*(1-eccentricity_m5^2)^.5/(1+eccentricity_m5*sin(argPericenter_m5))*24
+	tran_duration_m6=star$Rad*per_m6/(semiMajor_m6*pi)*tran_chord_m6*(1-eccentricity_m6^2)^.5/(1+eccentricity_m6*sin(argPericenter_m6))*24
+	tran_duration_m7=star$Rad*per_m7/(semiMajor_m7*pi)*tran_chord_m7*(1-eccentricity_m7^2)^.5/(1+eccentricity_m7*sin(argPericenter_m7))*24
+
+	#Remove NaN from transit durations
+	tran_duration_m1=ifelse(is.nan(tran_duration_m1),Inf,tran_duration_m1)
+	tran_duration_m2=ifelse(is.nan(tran_duration_m2),Inf,tran_duration_m2)
+	tran_duration_m3=ifelse(is.nan(tran_duration_m3),Inf,tran_duration_m3)
+	tran_duration_m4=ifelse(is.nan(tran_duration_m4),Inf,tran_duration_m4)
+	tran_duration_m5=ifelse(is.nan(tran_duration_m5),Inf,tran_duration_m5)
+	tran_duration_m6=ifelse(is.nan(tran_duration_m6),Inf,tran_duration_m6)
+	tran_duration_m7=ifelse(is.nan(tran_duration_m7),Inf,tran_duration_m7)
+
+	print("Interpolating stellar fluctuation values for each transit duration")
+	###Interpolate the CDPP values for each star
+	for (w in  1:number_stars) {
+		cdpp_m1[w]=as.vector(approx(x=CDPPx,y=CDPPy[,w], xout=tran_duration_m1[w], rule=2)$y)
+		cdpp_m2[w]=as.vector(approx(x=CDPPx,y=CDPPy[,w], xout=tran_duration_m2[w], rule=2)$y)
+		cdpp_m3[w]=as.vector(approx(x=CDPPx,y=CDPPy[,w], xout=tran_duration_m3[w], rule=2)$y)
+		cdpp_m4[w]=as.vector(approx(x=CDPPx,y=CDPPy[,w], xout=tran_duration_m4[w], rule=2)$y)
+		cdpp_m5[w]=as.vector(approx(x=CDPPx,y=CDPPy[,w], xout=tran_duration_m5[w], rule=2)$y)
+		cdpp_m6[w]=as.vector(approx(x=CDPPx,y=CDPPy[,w], xout=tran_duration_m6[w], rule=2)$y)
+		cdpp_m7[w]=as.vector(approx(x=CDPPx,y=CDPPy[,w], xout=tran_duration_m7[w], rule=2)$y)
+		}
+	
 	####Calculate signal scale
-	MES_m1=(rad_m1)^2*per_m1^(-1/3)*(1-impact_m1^2)^(1/4)
-	MES_m2=(rad_m2)^2*per_m2^(-1/3)*(1-impact_m2^2)^(1/4)
-	MES_m3=(rad_m3)^2*per_m3^(-1/3)*(1-impact_m3^2)^(1/4)
-	MES_m4=(rad_m4)^2*per_m4^(-1/3)*(1-impact_m4^2)^(1/4)
-	MES_m5=(rad_m5)^2*per_m5^(-1/3)*(1-impact_m5^2)^(1/4)
-	MES_m6=(rad_m6)^2*per_m6^(-1/3)*(1-impact_m6^2)^(1/4)
-	MES_m7=(rad_m7)^2*per_m7^(-1/3)*(1-impact_m7^2)^(1/4)
-
+	MES_m1=MES_calc(star, per_m1, rad_m1, cdpp_m1)
+	MES_m2=MES_calc(star, per_m2, rad_m2, cdpp_m2)
+	MES_m3=MES_calc(star, per_m3, rad_m3, cdpp_m3)
+	MES_m4=MES_calc(star, per_m4, rad_m4, cdpp_m4)
+	MES_m5=MES_calc(star, per_m5, rad_m5, cdpp_m5)
+	MES_m6=MES_calc(star, per_m6, rad_m6, cdpp_m6)
+	MES_m7=MES_calc(star, per_m7, rad_m7, cdpp_m7)
 
 	print("Sorting planets by MES values")
 	#####Sort MES Values
@@ -298,77 +374,42 @@ ExoMult <- function(rMin=0.5,rMax=16,alpha_1=-1.76,rad_break=2.66,alpha_2=-4.39,
 		rad_sorted_m6[i]=ifelse(MES_m1[i]==sortOrder[2],rad_m1[i],ifelse(MES_m2[i]==sortOrder[2],rad_m2[i],ifelse(MES_m3[i]==sortOrder[2],rad_m3[i],ifelse(MES_m4[i]==sortOrder[2],rad_m4[i],ifelse(MES_m5[i]==sortOrder[2],rad_m5[i],ifelse(MES_m6[i]==sortOrder[2],rad_m6[i],rad_m7[i]))))))
 		rad_sorted_m7[i]=ifelse(MES_m1[i]==sortOrder[1],rad_m1[i],ifelse(MES_m2[i]==sortOrder[1],rad_m2[i],ifelse(MES_m3[i]==sortOrder[1],rad_m3[i],ifelse(MES_m4[i]==sortOrder[1],rad_m4[i],ifelse(MES_m5[i]==sortOrder[1],rad_m5[i],ifelse(MES_m6[i]==sortOrder[1],rad_m6[i],rad_m7[i]))))))
 	
-		####Sorting Impact Values
-		impact_sorted_m1[i]=ifelse(MES_m1[i]==sortOrder[7],impact_m1[i],ifelse(MES_m2[i]==sortOrder[7],impact_m2[i],ifelse(MES_m3[i]==sortOrder[7],impact_m3[i],ifelse(MES_m4[i]==sortOrder[7],impact_m4[i],ifelse(MES_m5[i]==sortOrder[7],impact_m5[i],ifelse(MES_m6[i]==sortOrder[7],impact_m6[i],impact_m7[i]))))))
-		impact_sorted_m2[i]=ifelse(MES_m1[i]==sortOrder[6],impact_m1[i],ifelse(MES_m2[i]==sortOrder[6],impact_m2[i],ifelse(MES_m3[i]==sortOrder[6],impact_m3[i],ifelse(MES_m4[i]==sortOrder[6],impact_m4[i],ifelse(MES_m5[i]==sortOrder[6],impact_m5[i],ifelse(MES_m6[i]==sortOrder[6],impact_m6[i],impact_m7[i]))))))
-		impact_sorted_m3[i]=ifelse(MES_m1[i]==sortOrder[5],impact_m1[i],ifelse(MES_m2[i]==sortOrder[5],impact_m2[i],ifelse(MES_m3[i]==sortOrder[5],impact_m3[i],ifelse(MES_m4[i]==sortOrder[5],impact_m4[i],ifelse(MES_m5[i]==sortOrder[5],impact_m5[i],ifelse(MES_m6[i]==sortOrder[5],impact_m6[i],impact_m7[i]))))))
-		impact_sorted_m4[i]=ifelse(MES_m1[i]==sortOrder[4],impact_m1[i],ifelse(MES_m2[i]==sortOrder[4],impact_m2[i],ifelse(MES_m3[i]==sortOrder[4],impact_m3[i],ifelse(MES_m4[i]==sortOrder[4],impact_m4[i],ifelse(MES_m5[i]==sortOrder[4],impact_m5[i],ifelse(MES_m6[i]==sortOrder[4],impact_m6[i],impact_m7[i]))))))
-		impact_sorted_m5[i]=ifelse(MES_m1[i]==sortOrder[3],impact_m1[i],ifelse(MES_m2[i]==sortOrder[3],impact_m2[i],ifelse(MES_m3[i]==sortOrder[3],impact_m3[i],ifelse(MES_m4[i]==sortOrder[3],impact_m4[i],ifelse(MES_m5[i]==sortOrder[3],impact_m5[i],ifelse(MES_m6[i]==sortOrder[3],impact_m6[i],impact_m7[i]))))))
-		impact_sorted_m6[i]=ifelse(MES_m1[i]==sortOrder[2],impact_m1[i],ifelse(MES_m2[i]==sortOrder[2],impact_m2[i],ifelse(MES_m3[i]==sortOrder[2],impact_m3[i],ifelse(MES_m4[i]==sortOrder[2],impact_m4[i],ifelse(MES_m5[i]==sortOrder[2],impact_m5[i],ifelse(MES_m6[i]==sortOrder[2],impact_m6[i],impact_m7[i]))))))
-		impact_sorted_m7[i]=ifelse(MES_m1[i]==sortOrder[1],impact_m1[i],ifelse(MES_m2[i]==sortOrder[1],impact_m2[i],ifelse(MES_m3[i]==sortOrder[1],impact_m3[i],ifelse(MES_m4[i]==sortOrder[1],impact_m4[i],ifelse(MES_m5[i]==sortOrder[1],impact_m5[i],ifelse(MES_m6[i]==sortOrder[1],impact_m6[i],impact_m7[i]))))))
+		###Sorting Eccentricity
+		eccentricity_sorted_m1[i]=ifelse(MES_m1[i]==sortOrder[7],eccentricity_m1[i],ifelse(MES_m2[i]==sortOrder[7],eccentricity_m2[i],ifelse(MES_m3[i]==sortOrder[7],eccentricity_m3[i],ifelse(MES_m4[i]==sortOrder[7],eccentricity_m4[i],ifelse(MES_m5[i]==sortOrder[7],eccentricity_m5[i],ifelse(MES_m6[i]==sortOrder[7],eccentricity_m6[i],eccentricity_m7[i]))))))
+		eccentricity_sorted_m2[i]=ifelse(MES_m1[i]==sortOrder[6],eccentricity_m1[i],ifelse(MES_m2[i]==sortOrder[6],eccentricity_m2[i],ifelse(MES_m3[i]==sortOrder[6],eccentricity_m3[i],ifelse(MES_m4[i]==sortOrder[6],eccentricity_m4[i],ifelse(MES_m5[i]==sortOrder[6],eccentricity_m5[i],ifelse(MES_m6[i]==sortOrder[6],eccentricity_m6[i],eccentricity_m7[i]))))))
+		eccentricity_sorted_m3[i]=ifelse(MES_m1[i]==sortOrder[5],eccentricity_m1[i],ifelse(MES_m2[i]==sortOrder[5],eccentricity_m2[i],ifelse(MES_m3[i]==sortOrder[5],eccentricity_m3[i],ifelse(MES_m4[i]==sortOrder[5],eccentricity_m4[i],ifelse(MES_m5[i]==sortOrder[5],eccentricity_m5[i],ifelse(MES_m6[i]==sortOrder[5],eccentricity_m6[i],eccentricity_m7[i]))))))
+		eccentricity_sorted_m4[i]=ifelse(MES_m1[i]==sortOrder[4],eccentricity_m1[i],ifelse(MES_m2[i]==sortOrder[4],eccentricity_m2[i],ifelse(MES_m3[i]==sortOrder[4],eccentricity_m3[i],ifelse(MES_m4[i]==sortOrder[4],eccentricity_m4[i],ifelse(MES_m5[i]==sortOrder[4],eccentricity_m5[i],ifelse(MES_m6[i]==sortOrder[4],eccentricity_m6[i],eccentricity_m7[i]))))))
+		eccentricity_sorted_m5[i]=ifelse(MES_m1[i]==sortOrder[3],eccentricity_m1[i],ifelse(MES_m2[i]==sortOrder[3],eccentricity_m2[i],ifelse(MES_m3[i]==sortOrder[3],eccentricity_m3[i],ifelse(MES_m4[i]==sortOrder[3],eccentricity_m4[i],ifelse(MES_m5[i]==sortOrder[3],eccentricity_m5[i],ifelse(MES_m6[i]==sortOrder[3],eccentricity_m6[i],eccentricity_m7[i]))))))
+		eccentricity_sorted_m6[i]=ifelse(MES_m1[i]==sortOrder[2],eccentricity_m1[i],ifelse(MES_m2[i]==sortOrder[2],eccentricity_m2[i],ifelse(MES_m3[i]==sortOrder[2],eccentricity_m3[i],ifelse(MES_m4[i]==sortOrder[2],eccentricity_m4[i],ifelse(MES_m5[i]==sortOrder[2],eccentricity_m5[i],ifelse(MES_m6[i]==sortOrder[2],eccentricity_m6[i],eccentricity_m7[i]))))))
+		eccentricity_sorted_m7[i]=ifelse(MES_m1[i]==sortOrder[1],eccentricity_m1[i],ifelse(MES_m2[i]==sortOrder[1],eccentricity_m2[i],ifelse(MES_m3[i]==sortOrder[1],eccentricity_m3[i],ifelse(MES_m4[i]==sortOrder[1],eccentricity_m4[i],ifelse(MES_m5[i]==sortOrder[1],eccentricity_m5[i],ifelse(MES_m6[i]==sortOrder[1],eccentricity_m6[i],eccentricity_m7[i]))))))
+		
+		##Sorting CDPP values
+		CDPP_sorted_m1[i]=ifelse(MES_m1[i]==sortOrder[7],cdpp_m1[i],ifelse(MES_m2[i]==sortOrder[7],cdpp_m2[i],ifelse(MES_m3[i]==sortOrder[7],cdpp_m3[i],ifelse(MES_m4[i]==sortOrder[7],cdpp_m4[i],ifelse(MES_m5[i]==sortOrder[7],cdpp_m5[i],ifelse(MES_m6[i]==sortOrder[7],cdpp_m6[i],cdpp_m7[i]))))))
+		CDPP_sorted_m2[i]=ifelse(MES_m1[i]==sortOrder[6],cdpp_m1[i],ifelse(MES_m2[i]==sortOrder[6],cdpp_m2[i],ifelse(MES_m3[i]==sortOrder[6],cdpp_m3[i],ifelse(MES_m4[i]==sortOrder[6],cdpp_m4[i],ifelse(MES_m5[i]==sortOrder[6],cdpp_m5[i],ifelse(MES_m6[i]==sortOrder[6],cdpp_m6[i],cdpp_m7[i]))))))
+		CDPP_sorted_m3[i]=ifelse(MES_m1[i]==sortOrder[5],cdpp_m1[i],ifelse(MES_m2[i]==sortOrder[5],cdpp_m2[i],ifelse(MES_m3[i]==sortOrder[5],cdpp_m3[i],ifelse(MES_m4[i]==sortOrder[5],cdpp_m4[i],ifelse(MES_m5[i]==sortOrder[5],cdpp_m5[i],ifelse(MES_m6[i]==sortOrder[5],cdpp_m6[i],cdpp_m7[i]))))))
+		CDPP_sorted_m4[i]=ifelse(MES_m1[i]==sortOrder[4],cdpp_m1[i],ifelse(MES_m2[i]==sortOrder[4],cdpp_m2[i],ifelse(MES_m3[i]==sortOrder[4],cdpp_m3[i],ifelse(MES_m4[i]==sortOrder[4],cdpp_m4[i],ifelse(MES_m5[i]==sortOrder[4],cdpp_m5[i],ifelse(MES_m6[i]==sortOrder[4],cdpp_m6[i],cdpp_m7[i]))))))
+		CDPP_sorted_m5[i]=ifelse(MES_m1[i]==sortOrder[3],cdpp_m1[i],ifelse(MES_m2[i]==sortOrder[3],cdpp_m2[i],ifelse(MES_m3[i]==sortOrder[3],cdpp_m3[i],ifelse(MES_m4[i]==sortOrder[3],cdpp_m4[i],ifelse(MES_m5[i]==sortOrder[3],cdpp_m5[i],ifelse(MES_m6[i]==sortOrder[3],cdpp_m6[i],cdpp_m7[i]))))))
+		CDPP_sorted_m6[i]=ifelse(MES_m1[i]==sortOrder[2],cdpp_m1[i],ifelse(MES_m2[i]==sortOrder[2],cdpp_m2[i],ifelse(MES_m3[i]==sortOrder[2],cdpp_m3[i],ifelse(MES_m4[i]==sortOrder[2],cdpp_m4[i],ifelse(MES_m5[i]==sortOrder[2],cdpp_m5[i],ifelse(MES_m6[i]==sortOrder[2],cdpp_m6[i],cdpp_m7[i]))))))
+		CDPP_sorted_m7[i]=ifelse(MES_m1[i]==sortOrder[1],cdpp_m1[i],ifelse(MES_m2[i]==sortOrder[1],cdpp_m2[i],ifelse(MES_m3[i]==sortOrder[1],cdpp_m3[i],ifelse(MES_m4[i]==sortOrder[1],cdpp_m4[i],ifelse(MES_m5[i]==sortOrder[1],cdpp_m5[i],ifelse(MES_m6[i]==sortOrder[1],cdpp_m6[i],cdpp_m7[i]))))))
+		
 		}
-
-	####Calculate Semi-Major axis
-	semiMajor_sorted_m1=(per_sorted_m1^2*star$Mass*gravConstant/(4*pi^2))^(1/3)
-	semiMajor_sorted_m2=(per_sorted_m2^2*star$Mass*gravConstant/(4*pi^2))^(1/3)
-	semiMajor_sorted_m3=(per_sorted_m3^2*star$Mass*gravConstant/(4*pi^2))^(1/3)
-	semiMajor_sorted_m4=(per_sorted_m4^2*star$Mass*gravConstant/(4*pi^2))^(1/3)
-	semiMajor_sorted_m5=(per_sorted_m5^2*star$Mass*gravConstant/(4*pi^2))^(1/3)
-	semiMajor_sorted_m6=(per_sorted_m6^2*star$Mass*gravConstant/(4*pi^2))^(1/3)
-	semiMajor_sorted_m7=(per_sorted_m7^2*star$Mass*gravConstant/(4*pi^2))^(1/3)
-
-
-	###Calculate Transit Chords
-	tran_chord_m1=(1-impact_sorted_m1^2)^.5
-	tran_chord_m2=(1-impact_sorted_m2^2)^.5
-	tran_chord_m3=(1-impact_sorted_m3^2)^.5
-	tran_chord_m4=(1-impact_sorted_m4^2)^.5
-	tran_chord_m5=(1-impact_sorted_m5^2)^.5
-	tran_chord_m6=(1-impact_sorted_m6^2)^.5
-	tran_chord_m7=(1-impact_sorted_m7^2)^.5
-
-
-	#Calculate Transit Duration
-	tran_duration_m1=star$Rad*per_sorted_m1/(semiMajor_sorted_m1*pi)*tran_chord_m1*24
-	tran_duration_m2=star$Rad*per_sorted_m2/(semiMajor_sorted_m2*pi)*tran_chord_m2*24
-	tran_duration_m3=star$Rad*per_sorted_m3/(semiMajor_sorted_m3*pi)*tran_chord_m3*24
-	tran_duration_m4=star$Rad*per_sorted_m4/(semiMajor_sorted_m4*pi)*tran_chord_m4*24
-	tran_duration_m5=star$Rad*per_sorted_m5/(semiMajor_sorted_m5*pi)*tran_chord_m5*24
-	tran_duration_m6=star$Rad*per_sorted_m6/(semiMajor_sorted_m6*pi)*tran_chord_m6*24
-	tran_duration_m7=star$Rad*per_sorted_m7/(semiMajor_sorted_m7*pi)*tran_chord_m7*24
-
-	#Remove NaN from transit durations
-	tran_duration_m1=ifelse(is.nan(tran_duration_m1),Inf,tran_duration_m1)
-	tran_duration_m2=ifelse(is.nan(tran_duration_m2),Inf,tran_duration_m2)
-	tran_duration_m3=ifelse(is.nan(tran_duration_m3),Inf,tran_duration_m3)
-	tran_duration_m4=ifelse(is.nan(tran_duration_m4),Inf,tran_duration_m4)
-	tran_duration_m5=ifelse(is.nan(tran_duration_m5),Inf,tran_duration_m5)
-	tran_duration_m6=ifelse(is.nan(tran_duration_m6),Inf,tran_duration_m6)
-	tran_duration_m7=ifelse(is.nan(tran_duration_m7),Inf,tran_duration_m7)
-
-	print("Interpolating stellar fluctuation values for each transit duration")
-	###Interpolate the CDPP values for each star
-	for (w in  1:number_stars) {
-		cdpp_m1[w]=as.vector(approx(x=CDPPx,y=CDPPy[,w], xout=tran_duration_m1[w], rule=2)$y)
-		cdpp_m2[w]=as.vector(approx(x=CDPPx,y=CDPPy[,w], xout=tran_duration_m2[w], rule=2)$y)
-		cdpp_m3[w]=as.vector(approx(x=CDPPx,y=CDPPy[,w], xout=tran_duration_m3[w], rule=2)$y)
-		cdpp_m4[w]=as.vector(approx(x=CDPPx,y=CDPPy[,w], xout=tran_duration_m4[w], rule=2)$y)
-		cdpp_m5[w]=as.vector(approx(x=CDPPx,y=CDPPy[,w], xout=tran_duration_m5[w], rule=2)$y)
-		cdpp_m6[w]=as.vector(approx(x=CDPPx,y=CDPPy[,w], xout=tran_duration_m6[w], rule=2)$y)
-		cdpp_m7[w]=as.vector(approx(x=CDPPx,y=CDPPy[,w], xout=tran_duration_m7[w], rule=2)$y)
-		}
-
 
 	#Calculate the probabilty of detection for each planet
-	prob_detection_m1=probability_detection(star, per_sorted_m1, rad_sorted_m1, impact_sorted_m1,cdpp_m1,limb_u1,limb_u2,1)
-	prob_detection_m2=probability_detection(star, per_sorted_m2, rad_sorted_m2, impact_sorted_m2,cdpp_m2,limb_u1,limb_u2,2)
-	prob_detection_m3=probability_detection(star, per_sorted_m3, rad_sorted_m3, impact_sorted_m3,cdpp_m3,limb_u1,limb_u2,3)
-	prob_detection_m4=probability_detection(star, per_sorted_m4, rad_sorted_m4, impact_sorted_m4,cdpp_m4,limb_u1,limb_u2,4)
-	prob_detection_m5=probability_detection(star, per_sorted_m5, rad_sorted_m5, impact_sorted_m5,cdpp_m5,limb_u1,limb_u2,5)
-	prob_detection_m6=probability_detection(star, per_sorted_m6, rad_sorted_m6, impact_sorted_m6,cdpp_m6,limb_u1,limb_u2,6)
-	prob_detection_m7=probability_detection(star, per_sorted_m7, rad_sorted_m7, impact_sorted_m7,cdpp_m7,limb_u1,limb_u2,7)
+	prob_detection_m1=probability_detection(star, per_sorted_m1, rad_sorted_m1, CDPP_sorted_m1,1)
+	prob_detection_m2=probability_detection(star, per_sorted_m2, rad_sorted_m2, CDPP_sorted_m2,2)
+	prob_detection_m3=probability_detection(star, per_sorted_m3, rad_sorted_m3, CDPP_sorted_m3,3)
+	prob_detection_m4=probability_detection(star, per_sorted_m4, rad_sorted_m4, CDPP_sorted_m4,4)
+	prob_detection_m5=probability_detection(star, per_sorted_m5, rad_sorted_m5, CDPP_sorted_m5,5)
+	prob_detection_m6=probability_detection(star, per_sorted_m6, rad_sorted_m6, CDPP_sorted_m6,6)
+	prob_detection_m7=probability_detection(star, per_sorted_m7, rad_sorted_m7, CDPP_sorted_m7,7)
 
-
+	#Force detection probabilty to follow the sort order
+	prob_detection_m2=ifelse(prob_detection_m1<prob_detection_m2,prob_detection_m1,prob_detection_m2)
+	prob_detection_m3=ifelse(prob_detection_m2<prob_detection_m3,prob_detection_m2,prob_detection_m3)
+	prob_detection_m4=ifelse(prob_detection_m3<prob_detection_m4,prob_detection_m3,prob_detection_m4)
+	prob_detection_m5=ifelse(prob_detection_m4<prob_detection_m5,prob_detection_m4,prob_detection_m5)
+	prob_detection_m6=ifelse(prob_detection_m5<prob_detection_m6,prob_detection_m5,prob_detection_m6)
+	prob_detection_m7=ifelse(prob_detection_m6<prob_detection_m7,prob_detection_m6,prob_detection_m7)
 
 	#Remove planets based on their detection probabilty
 	random_detection_threshold=runif(number_stars,0,1)
@@ -388,9 +429,20 @@ ExoMult <- function(rMin=0.5,rMax=16,alpha_1=-1.76,rad_break=2.66,alpha_2=-4.39,
 	per_sorted_m6=ifelse(prob_detection_m6>random_detection_threshold,per_sorted_m6,NA)
 	per_sorted_m7=ifelse(prob_detection_m7>random_detection_threshold,per_sorted_m7,NA)
 	
+	eccentricity_sorted_m1=ifelse(prob_detection_m1>random_detection_threshold,eccentricity_sorted_m1,NA)
+	eccentricity_sorted_m2=ifelse(prob_detection_m2>random_detection_threshold,eccentricity_sorted_m2,NA)
+	eccentricity_sorted_m3=ifelse(prob_detection_m3>random_detection_threshold,eccentricity_sorted_m3,NA)
+	eccentricity_sorted_m4=ifelse(prob_detection_m4>random_detection_threshold,eccentricity_sorted_m4,NA)
+	eccentricity_sorted_m5=ifelse(prob_detection_m5>random_detection_threshold,eccentricity_sorted_m5,NA)
+	eccentricity_sorted_m6=ifelse(prob_detection_m6>random_detection_threshold,eccentricity_sorted_m6,NA)
+	eccentricity_sorted_m7=ifelse(prob_detection_m7>random_detection_threshold,eccentricity_sorted_m7,NA)
+	
 	print("Removing undetected systems")
 	###Move data to date frame and remove non-detected systems
-	return_df=data.frame(star$KIC,rad_sorted_m1,per_sorted_m1,rad_sorted_m2,per_sorted_m2,rad_sorted_m3,per_sorted_m3,rad_sorted_m4,per_sorted_m4,rad_sorted_m5,per_sorted_m5,rad_sorted_m6,per_sorted_m6,rad_sorted_m7,per_sorted_m7)
+	return_df=data.frame(star$KIC,rad_sorted_m1,per_sorted_m1,eccentricity_sorted_m1,rad_sorted_m2,per_sorted_m2,eccentricity_sorted_m2,
+		rad_sorted_m3,per_sorted_m3,eccentricity_sorted_m3,rad_sorted_m4,per_sorted_m4,eccentricity_sorted_m4,
+		rad_sorted_m5,per_sorted_m5,eccentricity_sorted_m5,rad_sorted_m6,per_sorted_m6,eccentricity_sorted_m6,
+		rad_sorted_m7,per_sorted_m7,eccentricity_sorted_m7)
 	return_df=return_df[!is.na(return_df["rad_sorted_m1"]),]
 
 	if(export_csv){
