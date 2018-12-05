@@ -8,6 +8,103 @@
 
 
 
+
+####Broken Powerlaw Distribution Draw####
+brokenPow <- function(n,aCon,bCon,xmix,xmin,xmax){
+ 	constant1=((xmix^(aCon+1)-xmin^(aCon+1))/(aCon+1)+(xmix^aCon/xmix^bCon)*(xmax^(bCon+1)-xmix^(bCon+1))/(bCon+1))^-1
+ 	constant2=constant1*(xmix^aCon/xmix^bCon)
+	turn=constant1*(xmix^(aCon+1)-xmin^(aCon+1))/(aCon+1)
+	rValue=runif(n)
+	results=ifelse(rValue<=turn,(rValue*(aCon+1)/constant1+xmin^(aCon+1))^(1/(aCon+1)),((rValue-turn)*(bCon+1)/constant2+xmix^(bCon+1))^(1/(bCon+1)))
+  	return(results)
+  	}
+
+####Rayleigh Distribution####
+rrayleigh <- function(n,sigma){
+ 	yValue=runif(n)
+	invCDF=sqrt(-2*sigma^2*log(1-yValue))
+  	return(invCDF)
+  	}
+
+###Function for MES calculation
+MES_calc<-function(star, period, radius,cdpp){
+
+	######Determine Stellar Limb Darkening parameters
+	limb_u1=-.000193*star$T_eff+1.5169
+	limb_u2=.000125*star$T_eff-0.4601
+
+	######Calculate Transit Depth####
+	krp=radius/star$Rad*0.00916399
+	c0  = 1.0 - (limb_u1+limb_u2)
+	omega = c0/4+0/5+(limb_u1+2*limb_u2)/6+0/7-limb_u2/8
+	ksq = 1.0 - krp^2
+	tmp0 = c0/4 * ksq
+	tmp2 = (limb_u1+2*limb_u2)/6* ksq^(3.0/2.0)
+	tmp4 = -limb_u2/8 * ksq^2
+	depth=(1.0 - (tmp0 + tmp2 + tmp4)/omega) * 1.0e6
+
+	######Calculate MES####
+	number_transits=star$d_span/period
+	MES=depth/(cdpp)*1.003*number_transits^.5
+
+	return(MES)
+	}
+
+######Function for detection probability#################
+probability_detection<-function(star, period, radius,cdpp,plNum){
+
+	######Calculate MES####
+	MES=MES_calc(star, period, radius,cdpp)
+
+	######Window Function#########
+	number_transits=star$d_span/period
+	probabilty_window=1-(1-star$duty)^number_transits-number_transits*star$duty*(1-star$duty)^(number_transits-1)-number_transits*(number_transits-1)/2*star$duty^2*(1-star$duty)^(number_transits-2)
+	probabilty_window=ifelse(number_transits<1,0,probabilty_window)
+	probabilty_window=ifelse(probabilty_window<0,0,probabilty_window)
+	probabilty_window=ifelse(probabilty_window>1,1,probabilty_window)
+
+	###Calulate the fraction detected at this MES
+	if(plNum==1){
+		fdet=ifelse(period>200,pgamma(MES-1.0984,shape=18.4119, scale=0.3959)*0.9051,pgamma(MES-0.0102,shape=29.3363, scale=0.2856)*0.9825)
+	}	else{	
+		fdet=ifelse(period>200,pgamma(MES-2.9774,shape=5.5213, scale=1.2307)*0.7456,pgamma(MES-0.0093,shape=21.3265, scale=0.4203)*0.9276)
+	}
+	return(fdet*probabilty_window)
+	}
+
+
+
+	#####Function to determine impact parameter
+impactDraw <- function(n,star,inclination,average_mutInc,per,node,ecc,arg_peri,plNum){
+		
+	if(plNum==1){
+		mutual_inclination=0
+	}	else{
+		mutual_inclination=rrayleigh(n,average_mutInc)*(2*pi)/360
+	}
+
+	###Draw argument of periapsis
+	w=asin(runif(n,0,1))
+
+	####Calculate Planet Inclination
+	if(plNum==1){
+		inclination_m=acos(cos(inclination)*cos(mutual_inclination)+sin(inclination)*sin(mutual_inclination)*cos(node))
+	}	else{
+		inclination_m=acos(cos(inclination)*cos(mutual_inclination)+sin(inclination)*sin(mutual_inclination)*cos(w))
+	}
+
+	###Planet Semi-major axis
+	gravConstant=6.674e-11*1.98855e30*(86400)^2/(6.957e8)^3
+	semiMajor=(per^2*star$Mass*gravConstant/(4*pi^2))^(1/3)
+
+	return(abs(semiMajor/star$Rad*(1-ecc^2)/(1+ecc*sin(arg_peri))*(sin(inclination_m)*sin(node)-cos(inclination_m)*cos(node))))
+	}
+
+
+
+
+
+
 ExoMult <- function(rMin=0.5,rMax=16,alpha_1=-1.65,rad_break=2.66,alpha_2=-4.35,pMin=.5,pMax=500,beta_1=0.76,per_break=7.09,beta_2=-0.64,
 	mut_Ray=1,ecc_alpha=0,ecc_beta=1,frac_m1=.72,frac_m2=.68,frac_m3=.66,frac_m4=.63,frac_m5=.60,frac_m6=.55,frac_m7=.40,export_csv=TRUE){
 
@@ -44,7 +141,6 @@ ExoMult <- function(rMin=0.5,rMax=16,alpha_1=-1.65,rad_break=2.66,alpha_2=-4.35,
 			return()})
 
 	number_stars=nrow(star)
-	gravConstant=6.674e-11*1.98855e30*(86400)^2/(6.957e8)^3
 
 
 	####Read CDPP Data into a matrix
@@ -65,99 +161,6 @@ ExoMult <- function(rMin=0.5,rMax=16,alpha_1=-1.65,rad_break=2.66,alpha_2=-4.35,
 	CDPPy[12,]=star$CDPP12
 	CDPPy[13,]=star$CDPP12.5
 	CDPPy[14,]=star$CDPP15
-
-	####Broken Powerlaw Distribution Draw####
-	brokenPow <- function(n,aCon,bCon,xmix,xmin,xmax){
-	 	constant1=((xmix^(aCon+1)-xmin^(aCon+1))/(aCon+1)+(xmix^aCon/xmix^bCon)*(xmax^(bCon+1)-xmix^(bCon+1))/(bCon+1))^-1
-	 	constant2=constant1*(xmix^aCon/xmix^bCon)
-		turn=constant1*(xmix^(aCon+1)-xmin^(aCon+1))/(aCon+1)
-		rValue=runif(n)
-		results=ifelse(rValue<=turn,(rValue*(aCon+1)/constant1+xmin^(aCon+1))^(1/(aCon+1)),((rValue-turn)*(bCon+1)/constant2+xmix^(bCon+1))^(1/(bCon+1)))
-	  	return(results)
-	  	}
-	
-		
-	####Rayleigh Distribution####
-	rrayleigh <- function(n,sigma){
-	 	yValue=runif(n)
-		invCDF=sqrt(-2*sigma^2*log(1-yValue))
-	  	return(invCDF)
-	  	}
-
-	###Function for MES calculation
-	MES_calc<-function(star, period, radius,cdpp){
-
-		######Determine Stellar Limb Darkening parameters
-		limb_u1=-.000193*star$T_eff+1.5169
-		limb_u2=.000125*star$T_eff-0.4601
-
-		######Calculate Transit Depth####
-		krp=radius/star$Rad*0.00916399
-		c0  = 1.0 - (limb_u1+limb_u2)
-		omega = c0/4+0/5+(limb_u1+2*limb_u2)/6+0/7-limb_u2/8
-		ksq = 1.0 - krp^2
-		tmp0 = c0/4 * ksq
-		tmp2 = (limb_u1+2*limb_u2)/6* ksq^(3.0/2.0)
-		tmp4 = -limb_u2/8 * ksq^2
-		depth=(1.0 - (tmp0 + tmp2 + tmp4)/omega) * 1.0e6
-
-		######Calculate MES####
-		number_transits=star$d_span/period
-		MES=depth/(cdpp)*1.003*number_transits^.5
-
-		return(MES)
-		}
-		
-	######Function for detection probability#################
-	probability_detection<-function(star, period, radius,cdpp,plNum){
-		
-		######Calculate MES####
-		MES=MES_calc(star, period, radius,cdpp)
-		
-		######Window Function#########
-		number_transits=star$d_span/period
-		probabilty_window=1-(1-star$duty)^number_transits-number_transits*star$duty*(1-star$duty)^(number_transits-1)-number_transits*(number_transits-1)/2*star$duty^2*(1-star$duty)^(number_transits-2)
-		probabilty_window=ifelse(number_transits<1,0,probabilty_window)
-		probabilty_window=ifelse(probabilty_window<0,0,probabilty_window)
-		probabilty_window=ifelse(probabilty_window>1,1,probabilty_window)
-
-		###Calulate the fraction detected at this MES
-		if(plNum==1){
-			fdet=ifelse(period>200,pgamma(MES-1.0984,shape=18.4119, scale=0.3959)*0.9051,pgamma(MES-0.0102,shape=29.3363, scale=0.2856)*0.9825)
-		}	else{	
-			fdet=ifelse(period>200,pgamma(MES-2.9774,shape=5.5213, scale=1.2307)*0.7456,pgamma(MES-0.0093,shape=21.3265, scale=0.4203)*0.9276)
-		}
-		return(fdet*probabilty_window)
-		}
-		
-	
-	
-		#####Function to determine impact parameter
-	impactDraw <- function(n,star,inclination,average_mutInc,per,node,ecc,arg_peri,plNum){
-		
-		if(plNum==1){
-			mutual_inclination=0
-		}	else{
-			mutual_inclination=rrayleigh(n,average_mutInc)*(2*pi)/360
-		}
-	
-		###Draw argument of periapsis
-		w=asin(runif(n,0,1))
-	
-		####Calculate Planet Inclination
-		if(plNum==1){
-			inclination_m=acos(cos(inclination)*cos(mutual_inclination)+sin(inclination)*sin(mutual_inclination)*cos(node))
-		}	else{
-			inclination_m=acos(cos(inclination)*cos(mutual_inclination)+sin(inclination)*sin(mutual_inclination)*cos(w))
-		}
-	
-		###Planet Semi-major axis
-		semiMajor=(per^2*star$Mass*gravConstant/(4*pi^2))^(1/3)
-	
-		return(abs(semiMajor/star$Rad*(1-ecc^2)/(1+ecc*sin(arg_peri))*(sin(inclination_m)*sin(node)-cos(inclination_m)*cos(node))))
-		}
-
-
 
 	########Create Blank Arrays
 
@@ -303,6 +306,7 @@ ExoMult <- function(rMin=0.5,rMax=16,alpha_1=-1.65,rad_break=2.66,alpha_2=-4.35,
 	tran_chord_m7=(1-impact_m7^2)^.5
 	
 	##Calculate Semi-Major Axis
+	gravConstant=6.674e-11*1.98855e30*(86400)^2/(6.957e8)^3
 	semiMajor_m1=(per_m1^2*star$Mass*gravConstant/(4*pi^2))^(1/3)
 	semiMajor_m2=(per_m2^2*star$Mass*gravConstant/(4*pi^2))^(1/3)
 	semiMajor_m3=(per_m3^2*star$Mass*gravConstant/(4*pi^2))^(1/3)
@@ -505,8 +509,6 @@ ExoMult.Prob <- function(radius,period,eccentricity,mut_Ray=0){
 			return()})
 
 	number_stars=nrow(star)
-	gravConstant=6.674e-11*1.98855e30*(86400)^2/(6.957e8)^3
-
 
 	####Read CDPP Data into a matrix
 	CDPPx=c(1.5,2,2.5,3,3.5,4.5,5,6,7.5,9,10.5,12,12.5,15)
@@ -526,91 +528,6 @@ ExoMult.Prob <- function(radius,period,eccentricity,mut_Ray=0){
 	CDPPy[12,]=star$CDPP12
 	CDPPy[13,]=star$CDPP12.5
 	CDPPy[14,]=star$CDPP15
-
-
-
-	
-	####Rayleigh Distribution####
-	rrayleigh <- function(n,sigma){
-	 	yValue=runif(n)
-		invCDF=sqrt(-2*sigma^2*log(1-yValue))
-	  	return(invCDF)
-	  	}
-
-	###Function for MES calculation
-	MES_calc<-function(star, period, radius,cdpp){
-
-		######Determine Stellar Limb Darkening parameters
-		limb_u1=-.000193*star$T_eff+1.5169
-		limb_u2=.000125*star$T_eff-0.4601
-
-		######Calculate Transit Depth####
-		krp=radius/star$Rad*0.00916399
-		c0  = 1.0 - (limb_u1+limb_u2)
-		omega = c0/4+0/5+(limb_u1+2*limb_u2)/6+0/7-limb_u2/8
-		ksq = 1.0 - krp^2
-		tmp0 = c0/4 * ksq
-		tmp2 = (limb_u1+2*limb_u2)/6* ksq^(3.0/2.0)
-		tmp4 = -limb_u2/8 * ksq^2
-		depth=(1.0 - (tmp0 + tmp2 + tmp4)/omega) * 1.0e6
-
-		######Calculate MES####
-		number_transits=star$d_span/period
-		MES=depth/(cdpp)*1.003*number_transits^.5
-
-		return(MES)
-		}
-	
-	######Function for detection probability#################
-	probability_detection<-function(star, period, radius,cdpp,plNum){
-	
-		######Calculate MES####
-		MES=MES_calc(star, period, radius,cdpp)
-	
-		######Window Function#########
-		number_transits=star$d_span/period
-		probabilty_window=1-(1-star$duty)^number_transits-number_transits*star$duty*(1-star$duty)^(number_transits-1)-number_transits*(number_transits-1)/2*star$duty^2*(1-star$duty)^(number_transits-2)
-		probabilty_window=ifelse(number_transits<1,0,probabilty_window)
-		probabilty_window=ifelse(probabilty_window<0,0,probabilty_window)
-		probabilty_window=ifelse(probabilty_window>1,1,probabilty_window)
-
-		###Calulate the fraction detected at this MES
-		if(plNum==1){
-			fdet=ifelse(period>200,pgamma(MES-1.0984,shape=18.4119, scale=0.3959)*0.9051,pgamma(MES-0.0102,shape=29.3363, scale=0.2856)*0.9825)
-		}	else{	
-			fdet=ifelse(period>200,pgamma(MES-2.9774,shape=5.5213, scale=1.2307)*0.7456,pgamma(MES-0.0093,shape=21.3265, scale=0.4203)*0.9276)
-		}
-		return(fdet*probabilty_window)
-		}
-	
-
-
-		#####Function to determine impact parameter
-	impactDraw <- function(n,star,inclination,average_mutInc,per,node,ecc,arg_peri,plNum){
-	
-		if(plNum==1){
-			mutual_inclination=0
-		}	else{
-			mutual_inclination=rrayleigh(n,average_mutInc)*(2*pi)/360
-		}
-
-		###Draw argument of periapsis
-		w=asin(runif(n,0,1))
-
-		####Calculate Planet Inclination
-		if(plNum==1){
-			inclination_m=acos(cos(inclination)*cos(mutual_inclination)+sin(inclination)*sin(mutual_inclination)*cos(node))
-		}	else{
-			inclination_m=acos(cos(inclination)*cos(mutual_inclination)+sin(inclination)*sin(mutual_inclination)*cos(w))
-		}
-
-		###Planet Semi-major axis
-		semiMajor=(per^2*star$Mass*gravConstant/(4*pi^2))^(1/3)
-
-		return(abs(semiMajor/star$Rad*(1-ecc^2)/(1+ecc*sin(arg_peri))*(sin(inclination_m)*sin(node)-cos(inclination_m)*cos(node))))
-		}
-
-
 
 	########Create Blank Arrays
 
@@ -733,6 +650,7 @@ ExoMult.Prob <- function(radius,period,eccentricity,mut_Ray=0){
 	tran_chord_m7=(1-impact_m7^2)^.5
 
 	##Calculate Semi-Major Axis
+	gravConstant=6.674e-11*1.98855e30*(86400)^2/(6.957e8)^3
 	semiMajor_m1=(per_m1^2*star$Mass*gravConstant/(4*pi^2))^(1/3)
 	semiMajor_m2=(per_m2^2*star$Mass*gravConstant/(4*pi^2))^(1/3)
 	semiMajor_m3=(per_m3^2*star$Mass*gravConstant/(4*pi^2))^(1/3)
@@ -908,7 +826,79 @@ ExoMult.Prob <- function(radius,period,eccentricity,mut_Ray=0){
 		sum(prob_detection_m5_unsorted)/number_stars,
 		sum(prob_detection_m6_unsorted)/number_stars,
 		sum(prob_detection_m7_unsorted)/number_stars)
+		
+	meanSeven=sum(pmin(prob_detection_m1[prob_detection_m1>0 & prob_detection_m2>0 & prob_detection_m3>0 & prob_detection_m4>0 & prob_detection_m5>0 & prob_detection_m6>0 & prob_detection_m7>0],
+	prob_detection_m2[prob_detection_m1>0 & prob_detection_m2>0 & prob_detection_m3>0 & prob_detection_m4>0 & prob_detection_m5>0 & prob_detection_m6>0 & prob_detection_m7>0],
+	prob_detection_m3[prob_detection_m1>0 & prob_detection_m2>0 & prob_detection_m3>0 & prob_detection_m4>0 & prob_detection_m5>0 & prob_detection_m6>0 & prob_detection_m7>0],
+	prob_detection_m4[prob_detection_m1>0 & prob_detection_m2>0 & prob_detection_m3>0 & prob_detection_m4>0 & prob_detection_m5>0 & prob_detection_m6>0 & prob_detection_m7>0],
+	prob_detection_m5[prob_detection_m1>0 & prob_detection_m2>0 & prob_detection_m3>0 & prob_detection_m4>0 & prob_detection_m5>0 & prob_detection_m6>0 & prob_detection_m7>0],
+	prob_detection_m6[prob_detection_m1>0 & prob_detection_m2>0 & prob_detection_m3>0 & prob_detection_m4>0 & prob_detection_m5>0 & prob_detection_m6>0 & prob_detection_m7>0],
+	prob_detection_m7[prob_detection_m1>0 & prob_detection_m2>0 & prob_detection_m3>0 & prob_detection_m4>0 & prob_detection_m5>0 & prob_detection_m6>0 & prob_detection_m7>0]))/number_stars
 
-	return(meanProb[1:clip])
+	meanSix=sum(pmin(prob_detection_m1[prob_detection_m1>0 & prob_detection_m2>0 & prob_detection_m3>0 & prob_detection_m4>0 & prob_detection_m5>0 & prob_detection_m6>0],
+	prob_detection_m2[prob_detection_m1>0 & prob_detection_m2>0 & prob_detection_m3>0 & prob_detection_m4>0 & prob_detection_m5>0 & prob_detection_m6>0],
+	prob_detection_m3[prob_detection_m1>0 & prob_detection_m2>0 & prob_detection_m3>0 & prob_detection_m4>0 & prob_detection_m5>0 & prob_detection_m6>0],
+	prob_detection_m4[prob_detection_m1>0 & prob_detection_m2>0 & prob_detection_m3>0 & prob_detection_m4>0 & prob_detection_m5>0 & prob_detection_m6>0],
+	prob_detection_m5[prob_detection_m1>0 & prob_detection_m2>0 & prob_detection_m3>0 & prob_detection_m4>0 & prob_detection_m5>0 & prob_detection_m6>0],
+	prob_detection_m6[prob_detection_m1>0 & prob_detection_m2>0 & prob_detection_m3>0 & prob_detection_m4>0 & prob_detection_m5>0 & prob_detection_m6>0]))/number_stars
+
+	meanFive=sum(pmin(prob_detection_m1[prob_detection_m1>0 & prob_detection_m2>0 & prob_detection_m3>0 & prob_detection_m4>0 & prob_detection_m5>0],
+	prob_detection_m2[prob_detection_m1>0 & prob_detection_m2>0 & prob_detection_m3>0 & prob_detection_m4>0 & prob_detection_m5>0],
+	prob_detection_m3[prob_detection_m1>0 & prob_detection_m2>0 & prob_detection_m3>0 & prob_detection_m4>0 & prob_detection_m5>0],
+	prob_detection_m4[prob_detection_m1>0 & prob_detection_m2>0 & prob_detection_m3>0 & prob_detection_m4>0 & prob_detection_m5>0],
+	prob_detection_m5[prob_detection_m1>0 & prob_detection_m2>0 & prob_detection_m3>0 & prob_detection_m4>0 & prob_detection_m5>0]))/number_stars
+
+	meanFour=sum(pmin(prob_detection_m1[prob_detection_m1>0 & prob_detection_m2>0 & prob_detection_m3>0 & prob_detection_m4>0],
+	prob_detection_m2[prob_detection_m1>0 & prob_detection_m2>0 & prob_detection_m3>0 & prob_detection_m4>0],
+	prob_detection_m3[prob_detection_m1>0 & prob_detection_m2>0 & prob_detection_m3>0 & prob_detection_m4>0],
+	prob_detection_m4[prob_detection_m1>0 & prob_detection_m2>0 & prob_detection_m3>0 & prob_detection_m4>0]))/number_stars
+
+	meanThree=sum(pmin(prob_detection_m1[prob_detection_m1>0 & prob_detection_m2>0 & prob_detection_m3>0],
+	prob_detection_m2[prob_detection_m1>0 & prob_detection_m2>0 & prob_detection_m3>0],
+	prob_detection_m3[prob_detection_m1>0 & prob_detection_m2>0 & prob_detection_m3>0]))/number_stars
+
+	meanTwo=sum(pmin(prob_detection_m1[prob_detection_m1>0 & prob_detection_m2>0],
+	prob_detection_m2[prob_detection_m1>0 & prob_detection_m2>0]))/number_stars
+
+	meanOne=sum(prob_detection_m1[prob_detection_m1>0])/number_stars
+
+	if(is.nan(meanSeven)){
+		meanSeven=0
+	}
+	if(is.nan(meanSix)){
+		meanSix=0
+	}
+	if(is.nan(meanFive)){
+		meanFive=0
+	}
+	if(is.nan(meanFour)){
+		meanFour=0
+	}
+	if(is.nan(meanThree)){
+		meanThree=0
+	}
+	if(is.nan(meanTwo)){
+		meanTwo=0
+	}
+	if(is.nan(meanOne)){
+		meanOne=0
+	}
+	
+	freq_m1=length(prob_detection_m1_unsorted)/length(prob_detection_m1[prob_detection_m1>0])
+	freq_m2=length(prob_detection_m2_unsorted)/length(prob_detection_m1[prob_detection_m1>0])
+	freq_m3=length(prob_detection_m3_unsorted)/length(prob_detection_m1[prob_detection_m1>0])
+	freq_m4=length(prob_detection_m4_unsorted)/length(prob_detection_m1[prob_detection_m1>0])
+	freq_m5=length(prob_detection_m5_unsorted)/length(prob_detection_m1[prob_detection_m1>0])
+	freq_m6=length(prob_detection_m6_unsorted)/length(prob_detection_m1[prob_detection_m1>0])
+	freq_m7=length(prob_detection_m7_unsorted)/length(prob_detection_m1[prob_detection_m1>0])
+	
+	freq_detect=c(freq_m1,freq_m2,freq_m3,freq_m4,freq_m5,freq_m6,freq_m7)
+	prob_Multiplicty=c(meanOne,meanTwo,meanThree,meanFour,meanFive,meanSix,meanSeven)
+	order_Multiplicity=order(meanProb, decreasing=TRUE)
+	return_df=data.frame(radius[order_Multiplicity][1:clip],period[order_Multiplicity][1:clip],eccentricity[order_Multiplicity][1:clip],
+		meanProb[order_Multiplicity][1:clip],freq_detect[order_Multiplicity][1:clip],prob_Multiplicty[order_Multiplicity][1:clip])	
+	names(return_df)=c("Radius","Period","Eccentricity","Probability_Detection","Frequency_Detection","Probability_Detecting_m_Planets")	
+
+	return(return_df)
 
 	}	
