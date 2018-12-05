@@ -896,7 +896,7 @@ ExoMult.Prob <- function(radius,period,eccentricity,mut_Ray=0){
 	prob_Multiplicty=c(meanOne,meanTwo,meanThree,meanFour,meanFive,meanSix,meanSeven)
 	order_Multiplicity=order(meanProb, decreasing=TRUE)
 	return_df=data.frame(radius[order_Multiplicity][1:clip],period[order_Multiplicity][1:clip],eccentricity[order_Multiplicity][1:clip],
-		meanProb[order_Multiplicity][1:clip],freq_detect[order_Multiplicity][1:clip],prob_Multiplicty[order_Multiplicity][1:clip])	
+		meanProb[order_Multiplicity][1:clip],freq_detect[order_Multiplicity][1:clip],prob_Multiplicty[1:clip])	
 	names(return_df)=c("Radius","Period","Eccentricity","Probability_Detection","Frequency_Detection","Probability_Detecting_m_Planets")	
 
 	return(return_df)
