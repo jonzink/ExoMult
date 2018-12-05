@@ -495,6 +495,8 @@ ExoMult.Prob <- function(radius,period,eccentricity,mut_Ray=0){
 		radius=c(radius,0*1:(7-clip))
 		period=c(period,Inf*1:(7-clip))
 		eccentricity=c(eccentricity,0*1:(7-clip))
+	} else{ 
+		clip=0
 	}
 
 
@@ -895,8 +897,15 @@ ExoMult.Prob <- function(radius,period,eccentricity,mut_Ray=0){
 	freq_detect=c(freq_m1,freq_m2,freq_m3,freq_m4,freq_m5,freq_m6,freq_m7)
 	prob_Multiplicty=c(meanOne,meanTwo,meanThree,meanFour,meanFive,meanSix,meanSeven)
 	order_Multiplicity=order(meanProb, decreasing=TRUE)
-	return_df=data.frame(radius[order_Multiplicity][1:clip],period[order_Multiplicity][1:clip],eccentricity[order_Multiplicity][1:clip],
-		meanProb[order_Multiplicity][1:clip],freq_detect[order_Multiplicity][1:clip],prob_Multiplicty[1:clip])	
+	
+	if (clip==0){
+		return_df=data.frame(radius[order_Multiplicity],period[order_Multiplicity],eccentricity[order_Multiplicity],
+			meanProb[order_Multiplicity],freq_detect[order_Multiplicity],prob_Multiplicty)	
+	} else{
+		return_df=data.frame(radius[order_Multiplicity][1:clip],period[order_Multiplicity][1:clip],eccentricity[order_Multiplicity][1:clip],
+			meanProb[order_Multiplicity][1:clip],freq_detect[order_Multiplicity][1:clip],prob_Multiplicty[1:clip])	
+	}
+		
 	names(return_df)=c("Radius","Period","Eccentricity","Probability_Detection","Frequency_Detection","Probability_Detecting_m_Planets")	
 
 	return(return_df)
