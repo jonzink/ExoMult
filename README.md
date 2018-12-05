@@ -1,6 +1,6 @@
 # ExoMult
 
-This is a forward modeling program that will simulate the expected detected transiting exoplanet population around the Kepler sample of "solar-like" stars. You can import your own multi-planet system parameters to determine the proability of being detected. Alternatively, you can use an underlaying power-law distribution to determine what population would be expected empirically. Multiplicity and its effects on detection efficiency are also considered here.
+This is a forward modeling program that will simulate the detected transiting exoplanet population around the Kepler sample of "solar-like" stars. You can import your own multi-planet system parameters to determine the proability of being detected or you can use an underlying power-law distribution to determine what population would be expected empirically. Multiplicity and its effects on detection efficiency are also considered here.
 
 ## Getting Started
 
@@ -36,7 +36,13 @@ Alternatively, the ExoMult.Prob function will produce a detection probabilty for
 +    eccentricity=c(0,0.05,0.1,0.15,0.2,0.25,0.3))
 ```
 
-ExoMult.Prob will produce a vector the size of the input planetary system. Each value will correspond to the probability of transiting and detecting a planet of the given radius, period, and eccentricity values. This is done by marginalizing over all of the stars within the stellar sample. It is important to note that these probabilities are not independent. The probability of detecting all of the given planets is equal to the minimum probability produced by the system.
+ExoMult.Prob will produce a data frame corresponding to the input planetary system. This data frame will be sorted by decending detection probability. 
+
+  Probability_Detection = Gives the probabilty each planet transits and is detected.
+
+  Frequency_Detection = Given that any planet is detected, how often was this planet detected.
+
+  Probability_Detection_m_Planets = The probability that a mulitplicity of at least m will be detected for this system, where m is an integer value corresponding to the data frame index. 
 
 
 ### The ExoMult Function
