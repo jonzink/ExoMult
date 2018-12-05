@@ -28,8 +28,16 @@ Now you can execute the ExoMult function
 ```
 > ExoMult()
 ```
-
 ExoMult will return a data frame of the detected planets and export the results to a csv file "simulated_detect_pop.csv"
+
+Alternatively, the ExoMult.Prob function will produce a detection probabilty for a given system of planets.
+```
+> ExoMult.Prob(radius=c(1,2,3,4,5,6,7),period=c(10,20,30,40,50,60,70),
++    eccentricity=c(0,0.05,0.1,0.15,0.2,0.25,0.3))
+```
+
+ExoMult.Prob will produce a vector the size of the input planetary system. Each value will correspond to the probability of transiting and detecting a planet of the given radius, period, and eccentricity values. This is done by marginalizing over all of the stars within the stellar sample. It is important to note that these probabilities are not independent. The probability of detecting all of the given planets is equal to the minimum probability produced by the system.
+
 
 ### The ExoMult Function
 
@@ -39,7 +47,7 @@ ExoMult(rMin=0.5, rMax=16, alpha_1=-1.65, rad_break=2.66, alpha_2=-4.35, pMin=0.
   beta_1=0.76, per_break=7.09, beta_2=-0.64, mut_Ray=1, ecc_alpha=0, ecc_beta=1, frac_m1=0.72,
   frac_m2=0.68, frac_m3=0.66, frac_m4=0.63, frac_m5=0.60, frac_m6=0.55, frac_m7=0.40, export_csv=TRUE)
 ```
-  # Arguments
+# Arguments
 
 
 rMin, rMax   =   The minimum/maximum values of radius considered in this population simulation. The units are provided in Earth radii.
@@ -60,7 +68,7 @@ rad_break = The radius value where the power-law distribution changes exponents.
 per_break = The radius value where the power-law distribution changes exponents.  
 
 
-mut_Ray = The Rayleigh distribution parameter used to determine the expected mutual inclination dispersion for each system. This values is given in units of degrees.
+mut_Ray = The Rayleigh distribution parameter used to determine the expected mutual inclination dispersion for each system. This values is given in units of degrees. Putting a zero in this parameter will produce flat disks. 
 
 
 ecc_alpha, ecc_beta = The Beta distribution parameters used to determine the eccentricty of each planet. The default settings will produce zero eccentricity for each planet.
@@ -70,6 +78,27 @@ frac_m1, frac_m2, frac_m3, frac_m4, frac_m5, frac_m6, frac_m7 = the fraction of 
 
 
 export_csv = Tell ExoMult whether it should or should not print the results to a csv file.
+
+
+### The ExoMult.Prob Function
+
+```
+ExoMult.Prob(radius, period, eccentricity, mut_Ray=0)
+```
+# Arguments
+
+
+radius = A user provided vector of planet radii within the system of interest. The units are provided in Earth radii. Currently, ExoMult can accept systems with up to 7 planets.
+
+
+period = A user provided vector of planet periods, ordered to correspond with the planet radii given. The units are provided in days.
+
+eccentricity = A user provided vector of planet eccentricitiesr, odered to correspond with the planet radii given. These values should range from [0,1].
+
+
+mut_Ray = The Rayleigh distribution parameter used to determine the expected mutual inclination dispersion for each system. This values is given in units of degrees. Putting a zero in this parameter will produce flat disks.
+
+
 
 ## Recommendations
 
