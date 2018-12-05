@@ -71,7 +71,7 @@ beta_1, beta_2 = The population parameter for the planet period distribution. Th
 rad_break = The radius value where the power-law distribution changes exponents.  
 
 
-per_break = The radius value where the power-law distribution changes exponents.  
+per_break = The period value where the power-law distribution changes exponents.  
 
 
 mut_Ray = The Rayleigh distribution parameter used to determine the expected mutual inclination dispersion for each system. This values is given in units of degrees. Putting a zero in this parameter will produce flat disks. 
