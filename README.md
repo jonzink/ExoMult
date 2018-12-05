@@ -1,6 +1,6 @@
 # ExoMult
 
-This is a forward modling program that will simulate the expected detected transiting exoplanet population around the Kepler sample of "solar-like" stars. This is achieved by using an underlaying power-law distribution for both planet period and radius. Multiplicity and its effects on detection efficiency are also considered here.
+This is a forward modeling program that will simulate the expected detected transiting exoplanet population around the Kepler sample of "solar-like" stars. You can import your own multi-planet system parameters to determine the proability of being detected. Alternatively, you can use an underlaying power-law distribution to determine what population would be expected empirically. Multiplicity and its effects on detection efficiency are also considered here.
 
 ## Getting Started
 
