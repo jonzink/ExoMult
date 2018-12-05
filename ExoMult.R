@@ -858,7 +858,6 @@ ExoMult.Prob <- function(radius,period,eccentricity,mut_Ray=0){
 		prob_detection_m5[per_sorted_m5==period[2] & prob_detection_m5>0],
 		prob_detection_m6[per_sorted_m6==period[2] & prob_detection_m6>0],
 		prob_detection_m7[per_sorted_m7==period[2] & prob_detection_m7>0])
-		guy
 	
 	prob_detection_m3_unsorted=c(prob_detection_m1[per_sorted_m1==period[3] & prob_detection_m1>0],
 		prob_detection_m2[per_sorted_m2==period[3] & prob_detection_m2>0],
