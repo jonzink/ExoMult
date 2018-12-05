@@ -32,8 +32,7 @@ ExoMult will return a data frame of the detected planets and export the results 
 
 Alternatively, the ExoMult.Prob function will produce a detection probabilty for a given system of planets.
 ```
-> ExoMult.Prob(radius=c(1,2,3,4,5,6,7),period=c(10,20,30,40,50,60,70),
-+    eccentricity=c(0,0.05,0.1,0.15,0.2,0.25,0.3))
+> ExoMult.Prob(radius=c(1,2,3,4), period=c(10,20,30,40), eccentricity=c(0,0.05,0.1,0.15))
 ```
 
 ExoMult.Prob will produce a data frame corresponding to the input planetary system. This data frame will be sorted by decending detection probability. 
