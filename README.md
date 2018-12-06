@@ -1,4 +1,4 @@
-# ExoMult
+### ExoMult
 
 This is a forward modeling program that will simulate the detected transiting exoplanet population around the Kepler sample of "solar-like" stars. You can import your own multi-planet system parameters to determine the proability of being detected or you can use an underlying power-law distribution to determine what population would be expected empirically. Multiplicity and its effects on detection efficiency are also considered here.
 
@@ -14,7 +14,7 @@ To run the software begin by installing R. The latest version of R can be downlo
 ```
 https://www.r-project.org
 ```
-*When running ExoMult in Python, it is still necessary to download and install R.  
+**When running ExoMult in Python, it is still necessary to download and install R.**  
 
 
 ## Running ExoMult in R
@@ -41,18 +41,18 @@ Alternatively, the ExoMult.Prob function will produce a detection probabilty for
 
 ExoMult.Prob will produce a data frame corresponding to the input planetary system. This data frame will be sorted by decending detection probability. 
 
-  Probability_Detection = Gives the probabilty each planet transits and is detected.
+- Probability_Detection = Gives the probabilty each planet transits and is detected.
 
-  Frequency_Detection = Given that any planet is detected, how often was this planet detected.
-
-  Probability_Detection_m_Planets = The probability that a mulitplicity of at least m will be detected for this system, where m is an integer value corresponding to the data frame index. 
+- Frequency_Detection = Given that any planet is detected, how often was this planet detected.
+    
+- Probability_Detection_m_Planets = The probability that a mulitplicity of at least m will be detected for this system, where m is an integer value corresponding to the data frame index. 
 
 
 ## Running ExoMult in Python
 
 For improved speed and easy we recommend using ExoMult in R, however, a Python wrapper is also available. Before starting, make sure that "kepler_solar-like_stellar_parameters.csv", "ExoMult.R", and "ExoMult.py" are located in the same directory. 
 
-Other required modules include : numpy, rpy2, pandas2ri, and their associated dependencies.
+*Other required modules include : numpy, rpy2, pandas2ri, and their associated dependencies.*
 
 Begin by opening Python in the appropriate directory.
 ```
@@ -79,11 +79,11 @@ Alternatively, the ExoMult_Prob function will produce a detection probabilty for
 
 ExoMult_Prob will produce a Pandas data frame corresponding to the input planetary system. This data frame will be sorted by decending detection probability. 
 
-  Probability_Detection = Gives the probabilty each planet transits and is detected.
+- Probability_Detection = Gives the probabilty each planet transits and is detected.
 
-  Frequency_Detection = Given that any planet is detected, how often was this planet detected.
+- Frequency_Detection = Given that any planet is detected, how often was this planet detected.
 
-  Probability_Detection_m_Planets = The probability that a mulitplicity of at least m will be detected for this system, where m is an integer value corresponding to the data frame index. 
+- Probability_Detection_m_Planets = The probability that a mulitplicity of at least m will be detected for this system, where m is an integer value corresponding to the data frame index. 
 
 
 
@@ -97,35 +97,34 @@ ExoMult(rMin=0.5, rMax=16, alpha_1=-1.65, rad_break=2.66, alpha_2=-4.35, pMin=0.
 ```
 # Arguments
 
-
-rMin, rMax   =   The minimum/maximum values of radius considered in this population simulation. The units are provided in Earth radii.
-
-
-pMin, pMax = The minimum/maximum values of period considered in this population simulation. The units are provided in days.
+- **rMin, rMax** = The minimum/maximum values of radius considered in this population simulation. The units are provided in Earth radii.
 
 
-alpha_1, alpha_2 = The population parameter for the planet radius distribution. The values correspond to exponent of the power-law.
+- **pMin, pMax** = The minimum/maximum values of period considered in this population simulation. The units are provided in days.
 
 
-beta_1, beta_2 = The population parameter for the planet period distribution. The values correspond to exponent of the power-law.
+- **alpha_1, alpha_2** = The population parameter for the planet radius distribution. The values correspond to exponent of the power-law.
 
 
-rad_break = The radius value where the power-law distribution changes exponents.  
+- **beta_1, beta_2** = The population parameter for the planet period distribution. The values correspond to exponent of the power-law.
 
 
-per_break = The period value where the power-law distribution changes exponents.  
+- **rad_break** = The radius value where the power-law distribution changes exponents.  
 
 
-mut_Ray = The Rayleigh distribution parameter used to determine the expected mutual inclination dispersion for each system. This values is given in units of degrees. Putting a zero in this parameter will produce flat disks. 
+- **per_break** = The period value where the power-law distribution changes exponents.  
 
 
-ecc_alpha, ecc_beta = The Beta distribution parameters used to determine the eccentricty of each planet. The default settings will produce zero eccentricity for each planet.
+- **mut_Ray** = The Rayleigh distribution parameter used to determine the expected mutual inclination dispersion for each system. This values is given in units of degrees. Putting a zero in this parameter will produce flat disks. 
 
 
-frac_m1, frac_m2, frac_m3, frac_m4, frac_m5, frac_m6, frac_m7 = the fraction of the stellar population with at least m planets.
+- **ecc_alpha, ecc_beta** = The Beta distribution parameters used to determine the eccentricty of each planet. The default settings will produce zero eccentricity for each planet.
 
 
-export_csv = Tell ExoMult whether it should or should not print the results to a csv file.
+- **frac_m1, frac_m2, frac_m3, frac_m4, frac_m5, frac_m6, frac_m7** = the fraction of the stellar population with at least m planets.
+
+
+- **export_csv** = Tell ExoMult whether it should or should not print the results to a csv file. A Boolean value is expected. 
 
 
 ### The ExoMult.Prob (or ExoMult_Prob) Function
@@ -135,16 +134,15 @@ ExoMult.Prob(radius, period, eccentricity, mut_Ray=0)
 ```
 # Arguments
 
-
-radius = A user provided vector of planet radii within the system of interest. The units are provided in Earth radii. Currently, ExoMult can accept systems with up to 7 planets.
-
-
-period = A user provided vector of planet periods, ordered to correspond with the planet radii given. The units are provided in days.
-
-eccentricity = A user provided vector of planet eccentricitiesr, odered to correspond with the planet radii given. These values should range from [0,1].
+- **radius** = A user provided vector of planet radii within the system of interest. The units are provided in Earth radii. Currently, ExoMult can accept systems with up to 7 planets.
 
 
-mut_Ray = The Rayleigh distribution parameter used to determine the expected mutual inclination dispersion for each system. This values is given in units of degrees. Putting a zero in this parameter will produce flat disks.
+- **period** = A user provided vector of planet periods, ordered to correspond with the planet radii given. The units are provided in days.
+
+- **eccentricity** = A user provided vector of planet eccentricitiesr, odered to correspond with the planet radii given. These values should range from [0,1].
+
+
+- **mut_Ray** = The Rayleigh distribution parameter used to determine the expected mutual inclination dispersion for each system. This values is given in units of degrees. Putting a zero in this parameter will produce flat disks.
 
 
 
