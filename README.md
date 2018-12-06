@@ -1,5 +1,4 @@
-### ExoMult
-
+# ExoMult
 This is a forward modeling program that will simulate the detected transiting exoplanet population around the Kepler sample of "solar-like" stars. You can import your own multi-planet system parameters to determine the proability of being detected or you can use an underlying power-law distribution to determine what population would be expected empirically. Multiplicity and its effects on detection efficiency are also considered here.
 
 
@@ -41,11 +40,11 @@ Alternatively, the ExoMult.Prob function will produce a detection probabilty for
 
 ExoMult.Prob will produce a data frame corresponding to the input planetary system. This data frame will be sorted by decending detection probability. 
 
-- Probability_Detection = Gives the probabilty each planet transits and is detected.
-
-- Frequency_Detection = Given that any planet is detected, how often was this planet detected.
-    
-- Probability_Detection_m_Planets = The probability that a mulitplicity of at least m will be detected for this system, where m is an integer value corresponding to the data frame index. 
+| Output | Description |
+| --- | --- |
+| `Probability_Detection` | The probabilty each planet transits and is detected. |
+| `Frequency_Detection` | The frequency in which this planet was found, given that any planet was detected. |
+| `Probability_Detection_m_Planets` | The probability that a mulitplicity of at least m will be detected for this system, where m is an integer value corresponding to the data frame index.  |
 
 
 ## Running ExoMult in Python
@@ -79,15 +78,14 @@ Alternatively, the ExoMult_Prob function will produce a detection probabilty for
 
 ExoMult_Prob will produce a Pandas data frame corresponding to the input planetary system. This data frame will be sorted by decending detection probability. 
 
-- Probability_Detection = Gives the probabilty each planet transits and is detected.
+| Output | Description |
+| --- | --- |
+| `Probability_Detection` | The probabilty each planet transits and is detected. |
+| `Frequency_Detection` | The frequency in which this planet was found, given that any planet was detected. |
+| `Probability_Detection_m_Planets` | The probability that a mulitplicity of at least m will be detected for this system, where m is an integer value corresponding to the data frame index.  |
 
-- Frequency_Detection = Given that any planet is detected, how often was this planet detected.
 
-- Probability_Detection_m_Planets = The probability that a mulitplicity of at least m will be detected for this system, where m is an integer value corresponding to the data frame index. 
-
-
-
-### The ExoMult Function
+## The ExoMult Function
 
 The above opperation will run ExoMult with the default setting.
 ```
@@ -95,7 +93,7 @@ ExoMult(rMin=0.5, rMax=16, alpha_1=-1.65, rad_break=2.66, alpha_2=-4.35, pMin=0.
   beta_1=0.76, per_break=7.09, beta_2=-0.64, mut_Ray=1, ecc_alpha=0, ecc_beta=1, frac_m1=0.72,
   frac_m2=0.68, frac_m3=0.66, frac_m4=0.63, frac_m5=0.60, frac_m6=0.55, frac_m7=0.40, export_csv=TRUE)
 ```
-# Arguments
+### Arguments
 
 - **rMin, rMax** = The minimum/maximum values of radius considered in this population simulation. The units are provided in Earth radii.
 
@@ -127,12 +125,12 @@ ExoMult(rMin=0.5, rMax=16, alpha_1=-1.65, rad_break=2.66, alpha_2=-4.35, pMin=0.
 - **export_csv** = Tell ExoMult whether it should or should not print the results to a csv file. A Boolean value is expected. 
 
 
-### The ExoMult.Prob (or ExoMult_Prob) Function
+## The ExoMult.Prob (or ExoMult_Prob) Function
 
 ```
 ExoMult.Prob(radius, period, eccentricity, mut_Ray=0)
 ```
-# Arguments
+### Arguments
 
 - **radius** = A user provided vector of planet radii within the system of interest. The units are provided in Earth radii. Currently, ExoMult can accept systems with up to 7 planets.
 
