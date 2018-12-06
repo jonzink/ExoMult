@@ -2,9 +2,11 @@
 
 This is a forward modeling program that will simulate the detected transiting exoplanet population around the Kepler sample of "solar-like" stars. You can import your own multi-planet system parameters to determine the proability of being detected or you can use an underlying power-law distribution to determine what population would be expected empirically. Multiplicity and its effects on detection efficiency are also considered here.
 
+
 ## Getting Started
 
-These instructions will get you a copy of the project up and running on your local machine for research, development, and testing purposes. 
+These instructions will get you a copy of the project up and running on your local machine for research, development, and testing purposes. ExoMult was orginally written in R, but we provide a wrapper to run the program in Python as well. 
+
 
 ### Prerequisites
 
@@ -12,10 +14,12 @@ To run the software begin by installing R. The latest version of R can be downlo
 ```
 https://www.r-project.org
 ```
+*When running ExoMult in Python, it is still necessary to download and install R.  
 
-## Running ExoMult
 
-Before starting, make sure that "kepler_solar-like_stellar_parameters.csv" and "ExoMult.R" are located in the same directory. Start by opeaning R in this directory.
+## Running ExoMult in R
+
+Before starting, make sure that "kepler_solar-like_stellar_parameters.csv" and "ExoMult.R" are located in the same directory. Start by opening R in this directory.
 
 ```
 $ R
@@ -42,6 +46,45 @@ ExoMult.Prob will produce a data frame corresponding to the input planetary syst
   Frequency_Detection = Given that any planet is detected, how often was this planet detected.
 
   Probability_Detection_m_Planets = The probability that a mulitplicity of at least m will be detected for this system, where m is an integer value corresponding to the data frame index. 
+
+
+## Running ExoMult in Python
+
+For improved speed and easy we recommend using ExoMult in R, however, a Python wrapper is also available. Before starting, make sure that "kepler_solar-like_stellar_parameters.csv", "ExoMult.R", and "ExoMult.py" are located in the same directory. 
+
+Other required modules include : numpy, rpy2, pandas2ri, and their associated dependencies.
+
+Begin by opening Python in the appropriate directory.
+```
+$ python
+```
+Now load ExoMult (for Python3):
+```
+>>> exec(open("./ExoMult.py").read())
+```
+Now load ExoMult (for Python2):
+```
+>>> execfile("ExoMult.py")
+```
+Now you can execute the ExoMult function
+```
+>>> ExoMult()
+```
+ExoMult will return a Pandas data frame of the detected planets and export the results to a csv file "simulated_detect_pop.csv"
+
+Alternatively, the ExoMult_Prob function will produce a detection probabilty for a given system of planets.
+```
+>>> ExoMult_Prob(radius=np.array[(1,2,3,4)], period=np.array[(10,20,30,40)], eccentricity=np.array[(0,0.05,0.1,0.15)])
+```
+
+ExoMult_Prob will produce a Pandas data frame corresponding to the input planetary system. This data frame will be sorted by decending detection probability. 
+
+  Probability_Detection = Gives the probabilty each planet transits and is detected.
+
+  Frequency_Detection = Given that any planet is detected, how often was this planet detected.
+
+  Probability_Detection_m_Planets = The probability that a mulitplicity of at least m will be detected for this system, where m is an integer value corresponding to the data frame index. 
+
 
 
 ### The ExoMult Function
@@ -85,7 +128,7 @@ frac_m1, frac_m2, frac_m3, frac_m4, frac_m5, frac_m6, frac_m7 = the fraction of 
 export_csv = Tell ExoMult whether it should or should not print the results to a csv file.
 
 
-### The ExoMult.Prob Function
+### The ExoMult.Prob (or ExoMult_Prob) Function
 
 ```
 ExoMult.Prob(radius, period, eccentricity, mut_Ray=0)
@@ -107,7 +150,7 @@ mut_Ray = The Rayleigh distribution parameter used to determine the expected mut
 
 ## Recommendations
 
-To utilize this code for an alternative stellar population, be sure that your stellar sample file has the same format as "kepler_solar-like_stellar_parameters.csv". 
+To utilize this code for an alternative stellar population, be sure that your stellar sample file has the same format as "kepler_solar-like_stellar_parameters.csv". For improved speed and easy we recommend using ExoMult in R.
 
 ## Please cite as
 J. K. Zink, J. L. Christiansen, and  B. M. S. Hansen 2018, MNRAS 
