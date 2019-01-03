@@ -149,6 +149,6 @@ ExoMult.Prob(radius, period, eccentricity, mut_Ray=0)
 To utilize this code for an alternative stellar population, be sure that your stellar sample file has the same format as "kepler_solar-like_stellar_parameters.csv". For improved speed and easy we recommend using ExoMult in R.
 
 ## Please cite as
-J. K. Zink, J. L. Christiansen, and  B. M. S. Hansen 2018, MNRAS 
+J. K. Zink, J. L. Christiansen, and  B. M. S. Hansen, 2019, ePrint (arXiv:1901.00196) 
 
 
