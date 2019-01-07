@@ -148,7 +148,18 @@ ExoMult.Prob(radius, period, eccentricity, mut_Ray=0)
 
 To utilize this code for an alternative stellar population, be sure that your stellar sample file has the same format as "kepler_solar-like_stellar_parameters.csv". For improved speed and easy we recommend using ExoMult in R.
 
-## Please cite as
-J. K. Zink, J. L. Christiansen, and  B. M. S. Hansen, 2019, ePrint (arXiv:1901.00196) 
-
+## Attribution
+Please cite as [Zink, Christiansen, & Hansen (2019)](https://arxiv.org/abs/1901.00196).
+```
+@article{ExoMult,
+author = {{Zink}, J. K. and {Christiansen}, J. L. and {Hansen}, B. M. S.},
+title = {Accounting for incompleteness due to transit multiplicity in Kepler planet occurrence rates},
+journal = {MNRAS},
+volume = {483},
+number = {4},
+pages = {4479-4494},
+year = {2019},
+doi = {10.1093/mnras/sty3463}
+}
+```
 
