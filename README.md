@@ -137,7 +137,7 @@ ExoMult.Prob(radius, period, eccentricity, mut_Ray=0)
 
 - **period** = A user provided vector of planet periods, ordered to correspond with the planet radii given. The units are provided in days.
 
-- **eccentricity** = A user provided vector of planet eccentricitiesr, odered to correspond with the planet radii given. These values should range from [0,1].
+- **eccentricity** = A user provided vector of planet eccentricities, odered to correspond with the planet radii given. These values should range from [0,1].
 
 
 - **mut_Ray** = The Rayleigh distribution parameter used to determine the expected mutual inclination dispersion for each system. This values is given in units of degrees. Putting a zero in this parameter will produce flat disks.
