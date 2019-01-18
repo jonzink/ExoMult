@@ -5,7 +5,7 @@
 ### Devolped on python 3.7.1 ###
 
 ### If you make use of this code, please cite: ###
-### J. K. Zink, J. L. Christiansen, and  B. M. S. Hansen 2018, MNRAS
+### J. K. Zink, J. L. Christiansen, and  B. M. S. Hansen 2019, MNRAS 483, 4479 
 
 
 
